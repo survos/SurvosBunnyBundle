@@ -21,10 +21,10 @@ class SurvosBunnyBundle extends AbstractBundle
         $serviceId = 'survos_bunny.bunny_service';
         $container->services()->alias(BunnyService::class, $serviceId);
         $builder->autowire($serviceId, BunnyService::class)
-            ->setArgument('$apiKey', $config['api_key'])
-            ->setArgument('$readonlyPassword', $config['readonly_password'])
-            ->setArgument('$password', $config['password'])
-            ->setArgument('$storageZone', $config['storage_zone'])
+            ->setArgument('$config', $config)
+//            ->setArgument('$readonlyPassword', $config['readonly_password'])
+//            ->setArgument('$password', $config['password'])
+//            ->setArgument('$storageZone', $config['storage_zone'])
             ->setAutoconfigured(true)
             ->setAutowired(true)
             ->setPublic(true);
@@ -56,9 +56,10 @@ class SurvosBunnyBundle extends AbstractBundle
         $definition->rootNode()
             ->children()
                 ->scalarNode('api_key')->defaultValue(null)->end()
+                ->scalarNode('storage_zone')->defaultValue(null)->end()
+                ->scalarNode('region')->defaultValue(null)->end()
                 ->scalarNode('readonly_password')->defaultValue(null)->end()
                 ->scalarNode('password')->defaultValue(null)->end()
-                ->scalarNode('storage_zone')->defaultValue(null)->end()
 //            ->integerNode('cache')->defaultValue('1h')->end()
             ->end();
     }

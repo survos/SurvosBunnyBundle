@@ -20,6 +20,8 @@ At the moment, the bundle only works with a single storage zone.
 
 ```bash
 cat << 'END' > .env.local
+BUNNY_STORAGE_ZONE=my-zone
+BUNNY_REGION=NY
 BUNNY_API_KEY="xxxxxxx-b025-42c7-b5f9-de009bfb5b7ea7a89fd3-2182-4868-zzzz-zzzzzzzz"
 BUNNY_PASSWORD=aaaaaaa-bbbb-ccccc-9805984a87bb-8379-4aed
 BUNNY_READONLY_PASSWORD=aaaaaaa-bbbb-ccccc-9805984a87bb-8379-4aed

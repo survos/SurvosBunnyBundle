@@ -25,9 +25,10 @@ class BunnyService
         private ?BunnyClient $bunnyClient=null,
         private ?BaseAPI $baseApi=null,
         private int $cacheTimeout = 0,
-        private ?string $apiKey = null,
-        private ?string $readonlyPassword = null,
-        private ?string $password = null, // for writing
+        private array $config=[], // comes from config/packages/survos_bunny.yaml
+//        private ?string $apiKey = null,
+//        private ?string $readonlyPassword = null,
+//        private ?string $password = null, // for writing
         private ?EdgeStorageAPI $edgeStorageApi = null,
         private ?string $storageZone = null,
     ) {
@@ -37,7 +38,7 @@ class BunnyService
         );
 
         $this->baseApi = new BaseAPI(
-            apiKey: $this->apiKey,
+            apiKey: $this->config['api_key'],
             client: $this->bunnyClient,
         );
     }
@@ -51,9 +52,9 @@ class BunnyService
     {
         if (!$this->edgeStorageApi) {
             $this->edgeStorageApi = new EdgeStorageAPI(
-                apiKey: $readOnlyPassword??$this->readonlyPassword,
+                apiKey: $readOnlyPassword??$this->config['readonly_password'],
                 client: $this->bunnyClient,
-                region: Region::NY // is this global? Or by zone?
+                region: $this->config['region']
             );
         }
 

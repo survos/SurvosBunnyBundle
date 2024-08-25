@@ -3,6 +3,7 @@
 namespace Survos\BunnyBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Http\Discovery\Psr18Client;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\String\Slugger\AsciiSlugger;
@@ -11,34 +12,63 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use ToshY\BunnyNet\BaseAPI;
 use ToshY\BunnyNet\Client\BunnyClient;
+use ToshY\BunnyNet\EdgeStorageAPI;
+use ToshY\BunnyNet\Enum\Region;
 
 class BunnyService
 {
-    private BunnyClient $bunnyClient;
 
     public function __construct(
         private CacheInterface $cache,
         private readonly LoggerInterface $logger,
         private readonly HttpClientInterface $client,
-        private readonly int $searchLimit,
-        private ?string $apiKey = null,
-        private ?string $storageZone = null,
+        private ?BunnyClient $bunnyClient=null,
+        private ?BaseAPI $baseApi=null,
         private int $cacheTimeout = 0,
+        private ?string $apiKey = null,
+        private ?string $readonlyPassword = null,
+        private ?string $password = null, // for writing
+        private ?EdgeStorageAPI $edgeStorageApi = null,
+        private ?string $storageZone = null,
     ) {
 // Create a BunnyClient using any HTTP client implementing "Psr\Http\Client\ClientInterface".
         $this->bunnyClient = new BunnyClient(
             client: new \Symfony\Component\HttpClient\Psr18Client(),
         );
+
+        $this->baseApi = new BaseAPI(
+            apiKey: $this->apiKey,
+            client: $this->bunnyClient,
+        );
+    }
+
+    public function getBaseApi(): ?BaseAPI
+    {
+        return $this->baseApi;
+    }
+
+    public function getEdgeApi(?string $readOnlyPassword=null): EdgeStorageAPI
+    {
+        if (!$this->edgeStorageApi) {
+            $this->edgeStorageApi = new EdgeStorageAPI(
+                apiKey: $readOnlyPassword??$this->readonlyPassword,
+                client: $this->bunnyClient,
+                region: Region::NY // is this global? Or by zone?
+            );
+        }
+
+        return $this->edgeStorageApi;
+    }
+
+    public function getStorageZone(): ?string
+    {
+        return $this->storageZone;
     }
 
     public function getBunnyClient()
     {
 
 // Provide the API key available at the "Account Settings > API" section.
-        $baseApi = new BaseAPI(
-            apiKey: $this->apiKey,
-            client: $this->bunnyClient,
-        );
         return $this->bunnyClient;
     }
     public function getCacheTimeout(): int

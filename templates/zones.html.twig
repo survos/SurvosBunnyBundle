@@ -1,0 +1,25 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <table class="table">
+        <tbody>
+            {% for zone in zones %}
+            <tr>
+                <td>
+                    <a href="{{ path('survos_bunny_zone', {id: zone.Id, zoneName: zone.Name}) }}">
+                        {{ zone.Name }}
+                    </a>
+                </td>
+                <td>
+                    {{ zone.DateModified }}
+                </td>
+                <td>
+                    {{ dump(zone) }}
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+{% endblock %}

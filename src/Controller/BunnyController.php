@@ -3,6 +3,7 @@
 namespace Survos\BunnyBundle\Controller;
 
 use Survos\BunnyBundle\Service\BunnyService;
+use Symfony\Bridge\Twig\Attribute\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,43 +22,47 @@ class BunnyController extends AbstractController
     {
 
     }
-    #[Route('/bunny', name: 'survos_bunny_list', methods: ['GET'])]
-    public function list(
-
-
-                          HttpClientInterface $httpClient,
-    ): Response
+    #[Route('/bunny', name: 'survos_bunny_zones', methods: ['GET'])]
+    #[Template('@SurvosBunny/zones.html.twig')]
+    public function zones(
+    ): Response|array
     {
+        $baseApi = $this->bunnyService->getBaseApi();
+        return ['zones' => $baseApi->listStorageZones()->getContents()];
+    }
 
-        $this->bunnyService->getBunnyClient();
-
-//        $httpClient =  Psr18ClientDiscovery::find();
-        $httpClient = new \Symfony\Component\HttpClient\Psr18Client();
-// Create a BunnyClient using any HTTP client implementing "Psr\Http\Client\ClientInterface".
-        $bunnyClient = new BunnyClient(
-            client: $httpClient
+    #[Route('/bunny/{zoneName}/{id}/{path}', name: 'survos_bunny_zone', methods: ['GET'])]
+    #[Template('@SurvosBunny/zone.html.twig')]
+    public function zone(
+        string $zoneName,
+        string $id,
+        ?string $path='/'
+    ): Response|array
+    {
+        $baseApi = $this->bunnyService->getBaseApi();
+//        $zone = $baseApi->getStorageZone($id)->getContents();
+//        $accessKey = $zone['ReadOnlyPassword'];
+//        $accessKey = null;
+        $zone = null;
+        $edgeStorageApi = $this->bunnyService->getEdgeApi();
+        $list = $edgeStorageApi->listFiles(
+            storageZoneName: $zoneName,
+            path: $path
         );
+        return [
+            'zone' => $zone,
+            'zoneName' => $zoneName,
+            'path' => $path,
+            'files' => $list->getContents()
+        ];
 
-// Provide the API key available at the "Account Settings > API" section.
-        $baseApi = new BaseAPI(
-            apiKey: $apiKey,
-            client: $bunnyClient,
-        );
-//        dd($baseApi->listCountries());
+        dd($list);
+
         $storageZoneName = 'museado';
         foreach ($baseApi->listStorageZones()->getContents() as $zone) {
             $accessKey = $zone['ReadOnlyPassword'];
 
 // Provide the "(Read-Only) Password" available at the "FTP & API Access" section of your specific storage zone.
-            $edgeStorageApi = new EdgeStorageAPI(
-                apiKey: $accessKey,
-                client: $bunnyClient,
-                region: Region::NY
-            );
-            $list = $edgeStorageApi->listFiles(
-                storageZoneName: $storageZoneName,
-                path: '/'
-            );
 
 
 //            +        $zoneDto = $serializer->denormalize($zoneArray, Zone::class, context: [

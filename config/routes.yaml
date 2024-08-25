@@ -1,6 +1,6 @@
-survos_pixie:
-  prefix: /pixie
+survos_bunny:
+  prefix: /bunny
   type: attribute
   resource:
-    path: '@SurvosPixieBundle/src/Controller/'
-    namespace: Survos\PixieBundle\Controller
+    path: '@SurvosBunnyBundle/src/Controller/'
+    namespace: Survos\BunnyBundle\Controller

@@ -1,3 +1,4 @@
 survos_bunny:
   api_key: '%env(BUNNY_API_KEY)%'
+  password: '%env(BUNNY_PASSWORD)%'
   readonly_password: '%env(BUNNY_READONLY_PASSWORD)%'

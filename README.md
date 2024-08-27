@@ -28,7 +28,8 @@ You can browse interactively with the basic admin controller.
 
 ```bash
 composer require survos/simple-datatables-bundle
-symfony open:local --path=/bunny
+symfony server:start -d
+symfony open:local --path=/bunny/zones
 ```
 
 Or edit .env.local and add your API key.

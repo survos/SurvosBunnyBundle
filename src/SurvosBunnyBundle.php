@@ -23,7 +23,7 @@ class SurvosBunnyBundle extends AbstractBundle
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        // get all bundles
+        // get all bundles https://symfony.com/doc/current/bundles/prepend_extension.html
         $bundles = $builder->getParameter('kernel.bundles');
         $hasSimpleDatatables = in_array(SurvosSimpleDatatablesBundle::class, array_values($bundles));
 
@@ -80,7 +80,7 @@ class SurvosBunnyBundle extends AbstractBundle
         $rootNode = $definition->rootNode();
         $rootNode
             ->children()
-                ->scalarNode('api_key')->defaultValue(null)->end()
+                ->scalarNode('api_key')->defaultNull()->end()
                 ->scalarNode('storage_zone')->defaultValue(null)->end()
                 ->scalarNode('region')->defaultValue(null)->end()
                 ->scalarNode('readonly_password')->defaultValue(null)->end()

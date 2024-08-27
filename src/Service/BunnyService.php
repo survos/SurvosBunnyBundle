@@ -36,25 +36,65 @@ class BunnyService
         $this->bunnyClient = new BunnyClient(
             client: new \Symfony\Component\HttpClient\Psr18Client(),
         );
+        if (!$this->storageZone) {
+            $this->storageZone=$this->config['storage_zone'];
+        }
 
-        $this->baseApi = new BaseAPI(
-            apiKey: $this->config['api_key'],
-            client: $this->bunnyClient,
-        );
     }
 
-    public function getBaseApi(): ?BaseAPI
+    public function getConfig(): array
     {
+        return $this->config;
+    }
+
+    public function getApiKey(): ?string
+    {
+        return $this->config['api_key'];
+
+    }
+
+    public function getEdgeStorageApi(): ?EdgeStorageAPI
+    {
+        return $this->edgeStorageApi;
+    }
+
+    public function getBaseApi(?string $apiKey=null): ?BaseAPI
+    {
+        if (!$this->baseApi) {
+            $this->baseApi = new BaseAPI(
+                apiKey: $apiKey??$this->config['api_key'],
+                client: $this->bunnyClient,
+            );
+        }
+
         return $this->baseApi;
     }
 
-    public function getEdgeApi(?string $readOnlyPassword=null): EdgeStorageAPI
+    public function downloadFile(string $filename, string $path, string $storageZone=null)
     {
+        $ret = $this->getEdgeApi()->downloadFile(
+            storageZoneName: $storageZone??$this->getStorageZone(),
+            path: $path,
+            fileName: $filename,
+        );
+
+        return $ret;
+    }
+
+    public function getEdgeApi(string $storageZone=null): EdgeStorageAPI
+    {
+        if (!$storageZone = $storageZone??$this->getStorageZone()) {
+            if (count($this->config['zones']) === 1) {
+                $storageZone = array_key_first($this->config['zones']);
+            }
+        }
+        assert($storageZone, "Missing storageZone!");
+
         if (!$this->edgeStorageApi) {
             $this->edgeStorageApi = new EdgeStorageAPI(
-                apiKey: $readOnlyPassword??$this->config['readonly_password'],
+                apiKey: $readOnlyPassword??$this->config['zones'][$storageZone]['readonly_password'],
                 client: $this->bunnyClient,
-                region: $this->config['region']
+                region: Region::NY // from($this->config['region']) # Region::NY # $this->config['region']
             );
         }
 

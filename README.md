@@ -1,45 +1,44 @@
 # BunnyBundle
 
-Under development...
+A Symfony bundle to interact with BunnyCDN via the Bunny-PHP library.
+
+Still under development, feedback welcome!  
 
 ## Installation
 
-Create a new project
+Go to https://dash.bunny.net/account/api-key and get the main api key.  You should create at least one zone, as the bundle does not support creating zones.
+
+Create a new Symfony project
 
 ```bash
 symfony new bunny-demo --webapp && cd bunny-demo
-```
-
-Until the recipe is property working, set the apiKey and readonlyPassword in your environment, the .env.local file during development and in the secrets value or however you set your environment in production.
-
-Go to https://dash.bunny.net/account/api-key to get the main api key
-
-Go to https://dash.bunny.net/storage and create a storage zone, then click on it and select "FTP and ApiAccess".  Copy those keys.
-
-At the moment, the bundle only works with a single storage zone.  
-
-```bash
-cat << 'END' > .env.local
-BUNNY_STORAGE_ZONE=my-zone
-BUNNY_REGION=NY
-BUNNY_API_KEY="xxxxxxx-b025-42c7-b5f9-de009bfb5b7ea7a89fd3-2182-4868-zzzz-zzzzzzzz"
-BUNNY_PASSWORD=aaaaaaa-bbbb-ccccc-9805984a87bb-8379-4aed
-BUNNY_READONLY_PASSWORD=aaaaaaa-bbbb-ccccc-9805984a87bb-8379-4aed
-END
-```
-
-Open .env.local and replace the values.
-
-```bash
 composer require survos/bunny-bundle
 ```
+
+Edit .env.local and add your API key.
+
+As each storage zone has its own passwords and id, these need to be configured individually in survos_bunny.yaml.  Rather than tediously configuring each zone by cutting and pasting, we can use the first utility to dump the configuration with just the main api key.  This saves you from having to go to  https://dash.bunny.net/storage and create a storage zone, then click on it and select "FTP and ApiAccess" and selecting each key.
+
+
+```bin
+bin/console bunny:config <api-key>
+```
+
+You can skip passing the api key on the command line by defining it as an environment variable, etc.
+```bash
+echo "BUNNY_API_KEY=api-key >> .env.local
+```
+
+This command dumps the packages/config/survos_bunny.yaml file with references to the environment variables, which are also dumped to .env.local.  If your application only reads from bunny, you can remove the password environment variables, it is only used during writing.  You can also remove the main api key if your application doesn't need it in production.
+
+Open .env.local and replace the values.
 
 Your application now has a bare-bones controller located at /admin/bunny, you may want to secure this route in security.yaml, or configure it in config/routes/survos_bunny.yaml.
 
 You also have access to a command line interface.
 
 ```bash
-bin/console bunny:list
+bin/console bunny:list 
 ```
 
 ```bash

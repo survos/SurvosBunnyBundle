@@ -4,7 +4,9 @@
 
 namespace Survos\BunnyBundle;
 
+use Survos\BunnyBundle\Command\BunnyConfigCommand;
 use Survos\BunnyBundle\Command\BunnyListCommand;
+use Survos\BunnyBundle\Command\BunnySyncCommand;
 use Survos\BunnyBundle\Controller\BunnyController;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -34,7 +36,7 @@ class SurvosBunnyBundle extends AbstractBundle
             ->addTag('controller.service_arguments')
         ;
 
-        foreach ([BunnyListCommand::class] as $commandName) {
+        foreach ([BunnyConfigCommand::class, BunnyListCommand::class, BunnySyncCommand::class] as $commandName) {
             $builder->autowire($commandName)
                 ->setAutoconfigured(true)
                 ->addTag('console.command')
@@ -60,6 +62,15 @@ class SurvosBunnyBundle extends AbstractBundle
                 ->scalarNode('region')->defaultValue(null)->end()
                 ->scalarNode('readonly_password')->defaultValue(null)->end()
                 ->scalarNode('password')->defaultValue(null)->end()
+
+            ->arrayNode('zones')
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('variable')
+            ->prototype('array')
+            ->useAttributeAsKey('variable')
+            ->prototype('variable')->end()
+            ->end()
+            ->end()
 //            ->integerNode('cache')->defaultValue('1h')->end()
             ->end();
     }

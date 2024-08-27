@@ -25,6 +25,16 @@ class BunnyController extends AbstractController
         return ['zones' => $baseApi->listStorageZones()->getContents()];
     }
 
+    #[Route('/{zoneName}}/{path}/{fileName}', name: 'survos_bunny_download', methods: ['GET'], requirements: ['path'=> ".+"])]
+    #[Template('@SurvosBunny/zone.html.twig')]
+    public function download(string $zoneName, string $path, string $fileName): Response
+    {
+        dd(get_defined_vars());
+        $response = $this->bunnyService->downloadFile($fileName,$path,$zoneName);
+        dd($response);
+    }
+
+
     #[Route('/{zoneName}/{id}/{path}', name: 'survos_bunny_zone', methods: ['GET'])]
     #[Template('@SurvosBunny/zone.html.twig')]
     public function zone(
@@ -38,7 +48,7 @@ class BunnyController extends AbstractController
 //        $accessKey = $zone['ReadOnlyPassword'];
 //        $accessKey = null;
         $zone = null;
-        $edgeStorageApi = $this->bunnyService->getEdgeApi();
+        $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
         $list = $edgeStorageApi->listFiles(
             storageZoneName: $zoneName,
             path: $path

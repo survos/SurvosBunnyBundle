@@ -19,6 +19,13 @@
                     {{ file.Length }}
                 </td>
                 <td>
+                    {# dumb! #}
+                    {% set filePath = file.Path|replace({zoneName:''}) %}
+                    {{ dump(file, path, filePath, zoneName) }}
+
+                    <a href="{{ path('survos_bunny_download', {zoneName: zoneName, path: filePath, fileName: file.ObjectName}) }}">
+                        Download
+                    </a>
 {#                    {{ dump(file) }}#}
                 </td>
             </tr>

@@ -84,7 +84,7 @@ class BunnyService
     public function getEdgeApi(string $storageZone=null): EdgeStorageAPI
     {
         if (!$storageZone = $storageZone??$this->getStorageZone()) {
-            if (count($this->config['zones']) === 1) {
+            if (count($this->config['zones']) >= 1) {
                 $storageZone = array_key_first($this->config['zones']);
             }
         }

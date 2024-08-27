@@ -1,6 +1,27 @@
 {% extends "base.html.twig" %}
 
 {% block body %}
+
+
+    {% set columns = [
+        'ObjectName',
+        'Path'
+    ] %}
+    <twig:simple_datatables
+            perPage="20"
+            :caller="_self"
+            :columns="columns"
+            :data="files"
+    >
+        <twig:block name="ObjectName">
+            <a href="{{ path('survos_bunny_zone', {id: zone ? zone.Id : '~', zoneName: zoneName, path: file.ObjectName}) }}">
+                {{ file.ObjectName }}
+            </a>
+        </twig:block>
+
+    </twig:simple_datatables>
+
+
     <h1>{{ zoneName }}</h1>
     <h2>{{ path  }}</h2>
     <table class="table">

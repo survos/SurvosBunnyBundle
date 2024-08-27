@@ -50,10 +50,6 @@ final class BunnyConfigCommand extends InvokableServiceCommand
             $zones = $baseApi->listStorageZones()->getContents();
             $zoneConfig = [];
             $env[] = "BUNNY_API_KEY=$apiKey";
-            $table = new Table($io);
-            $table->setHeaderTitle("Zones");
-            $headers = ['Name', 'StorageUsed','FilesStored','Id'];
-            $table->setHeaders($headers);
             foreach ($zones as $zone) {
                 $zoneName = strtoupper($zone['Name']);
                 // inject slugger?  Or try to avoid dependencies?
@@ -65,20 +61,14 @@ final class BunnyConfigCommand extends InvokableServiceCommand
                 ];
                 $env[] = "BUNNY_{$zoneName}_READONLY_PASSWORD=" . $zone['ReadOnlyPassword'];
                 $env[] = "BUNNY_{$zoneName}_PASSWORD=" . $zone['Password'];
-                $row = [];
-                foreach ($headers as $header) {
-                    $row[$header] = $zone[$header];
-                }
-                $table->addRow($row);
             }
-            $table->render();
             $config['survos_bunny'] = [
-                'api_key' => $apiKey,
+                'api_key' => "%env(BUNNY_API_KEY)%",
                 'zones' => $zoneConfig,
             ];
 
-            file_put_contents($filename = $this->projectDir . '/config/packages/survos_bunny.yaml', Yaml::dump($config, inline: 4   ));
-        $io->success($filename . ' written, add these to your environment, e.g. .env.local or the vault');
+        file_put_contents($filename = $this->projectDir . '/config/packages/survos_bunny.yaml', Yaml::dump($config, inline: 4   ));
+//        $io->success($filename . ' written, add these to your environment, e.g. .env.local or the vault');
         $io->writeln($env);
 
         return self::SUCCESS;

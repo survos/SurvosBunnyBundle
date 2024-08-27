@@ -11,7 +11,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class BunnyController extends AbstractController
 {
     public function __construct(
-        private BunnyService $bunnyService
+        private BunnyService $bunnyService,
+        private $simpleDatatablesInstalled = false
     )
     {
 

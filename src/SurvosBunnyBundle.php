@@ -64,13 +64,23 @@ class SurvosBunnyBundle extends AbstractBundle
                 ->scalarNode('password')->defaultValue(null)->end()
 
             ->arrayNode('zones')
-            ->normalizeKeys(false)
-            ->useAttributeAsKey('variable')
-            ->prototype('array')
-            ->useAttributeAsKey('variable')
-            ->prototype('variable')->end()
+            ->arrayPrototype()
+            ->children()
+                ->scalarNode('id')->end()
+                ->scalarNode('region')->end()
+                ->scalarNode('readonly_password')->end()
+                ->scalarNode('password')->end()
             ->end()
             ->end()
+            ->end()
+
+//            ->normalizeKeys(false)
+//            ->useAttributeAsKey('variable')
+//            ->prototype('array')
+//            ->useAttributeAsKey('variable')
+//            ->prototype('variable')->end()
+//            ->end()
+//            ->end()
 //            ->integerNode('cache')->defaultValue('1h')->end()
             ->end();
     }

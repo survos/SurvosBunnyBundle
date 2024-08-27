@@ -1,5 +1,4 @@
 survos_bunny:
-  prefix: /bunny
   type: attribute
   resource:
     path: '@SurvosBunnyBundle/src/Controller/'

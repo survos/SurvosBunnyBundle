@@ -17,11 +17,19 @@ class BunnyController extends AbstractController
     {
 
     }
+
+    private function checkSimpleDatatablesInstalled()
+    {
+        if (! $this->simpleDatatablesInstalled) {
+            throw new \LogicException("This page requires SimpleDatatables\n composer req survos/simple-datatables-bundle");
+        }
+    }
     #[Route('/zones', name: 'survos_bunny_zones', methods: ['GET'])]
     #[Template('@SurvosBunny/zones.html.twig')]
     public function zones(
     ): Response|array
     {
+        $this->checkSimpleDatatablesInstalled();
         $baseApi = $this->bunnyService->getBaseApi();
         return ['zones' => $baseApi->listStorageZones()->getContents()];
     }
@@ -30,6 +38,7 @@ class BunnyController extends AbstractController
     #[Template('@SurvosBunny/zone.html.twig')]
     public function download(string $zoneName, string $path, string $fileName): Response
     {
+        // @todo
         dd(get_defined_vars());
         $response = $this->bunnyService->downloadFile($fileName,$path,$zoneName);
         dd($response);
@@ -44,18 +53,13 @@ class BunnyController extends AbstractController
         ?string $path='/'
     ): Response|array
     {
-        $baseApi = $this->bunnyService->getBaseApi();
-//        $zone = $baseApi->getStorageZone($id)->getContents();
-//        $accessKey = $zone['ReadOnlyPassword'];
-//        $accessKey = null;
-        $zone = null;
+        $this->checkSimpleDatatablesInstalled();
         $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
         $list = $edgeStorageApi->listFiles(
             storageZoneName: $zoneName,
             path: $path
         );
         return [
-            'zone' => $zone,
             'zoneName' => $zoneName,
             'path' => $path,
             'files' => $list->getContents()

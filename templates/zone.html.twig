@@ -2,10 +2,13 @@
 
 {% block body %}
 
+    <h2>{{ path  }}</h2>
 
     {% set columns = [
         'ObjectName',
-        'Path'
+        'Length',
+        'Path',
+        'StorageZoneId',
     ] %}
     <twig:simple_datatables
             perPage="20"
@@ -14,45 +17,14 @@
             :data="files"
     >
         <twig:block name="ObjectName">
-            <a href="{{ path('survos_bunny_zone', {id: zone ? zone.Id : '~', zoneName: zoneName, path: file.ObjectName}) }}">
-                {{ file.ObjectName }}
+            <a href="{{ path('survos_bunny_zone', {id: row.StorageZoneId, zoneName: row.StorageZoneName, path: row.ObjectName}) }}">
+                {{ row.ObjectName }}
             </a>
         </twig:block>
 
+        <twig:block name="Length">
+            {{ row.IsDirectory ? '(dir)' : (row.Length)|number_format(0) }}
+        </twig:block>
+
     </twig:simple_datatables>
-
-
-    <h1>{{ zoneName }}</h1>
-    <h2>{{ path  }}</h2>
-    <table class="table">
-        <tbody>
-        {% for file in files %}
-            <tr>
-                <td>
-                    <a href="{{ path('survos_bunny_zone', {id: zone ? zone.Id : '~', zoneName: zoneName, path: file.ObjectName}) }}">
-                        {{ file.ObjectName }}
-                    </a>
-                </td>
-                <td>
-                    {{ file.Path }}
-                </td>
-                <td>
-                    {{ file.Length }}
-                </td>
-                <td>
-                    {# dumb! #}
-                    {% set filePath = file.Path|replace({zoneName:''}) %}
-                    {{ dump(file, path, filePath, zoneName) }}
-
-                    <a href="{{ path('survos_bunny_download', {zoneName: zoneName, path: filePath, fileName: file.ObjectName}) }}">
-                        Download
-                    </a>
-{#                    {{ dump(file) }}#}
-                </td>
-            </tr>
-        {% endfor %}
-
-        </tbody>
-
-    </table>
 {% endblock %}

@@ -1,25 +1,27 @@
 {% extends "base.html.twig" %}
 
 {% block body %}
-    <table class="table">
-        <tbody>
-            {% for zone in zones %}
-            <tr>
-                <td>
-                    <a href="{{ path('survos_bunny_zone', {id: zone.Id, zoneName: zone.Name}) }}">
-                        {{ zone.Name }}
-                    </a>
-                </td>
-                <td>
-                    {{ zone.DateModified }}
-                </td>
-                <td>
-                    {{ dump(zone) }}
-                </td>
-            </tr>
-            {% endfor %}
 
-        </tbody>
+    {% set columns = [
+        'Id',
+        'Name',
+        'Region',
+        'FilesStored',
+        'StorageUsed',
+        'StorageHostname',
+        'DateModified'
+    ] %}
+    <twig:simple_datatables
+            perPage="20"
+            :caller="_self"
+            :columns="columns"
+            :data="zones"
+    >
+        <twig:block name="Name">
+            <a href="{{ path('survos_bunny_zone', {id: row.Id, zoneName: row.Name}) }}">
+                {{ row.Name }}
+            </a>
+        </twig:block>
 
-    </table>
+    </twig:simple_datatables>
 {% endblock %}

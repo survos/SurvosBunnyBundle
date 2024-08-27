@@ -1,6 +1,6 @@
 # BunnyBundle
 
-A Symfony bundle to interact with BunnyCDN via the Bunny-PHP library.
+A Symfony bundle to interact with BunnyCDN via the [Bunny-PHP library](https://github.com/ToshY/BunnyNet-PHP).
 
 Still under development, feedback welcome!  
 
@@ -15,7 +15,7 @@ composer require survos/bunny-bundle
 
 Go to https://dash.bunny.net/account/api-key and get the main api key.  You should create at least one zone, as the bundle does not support creating zones.
 
-Create a new Symfony project
+Create a new Symfony project.
 
 ```bash
 symfony new bunny-demo --webapp && cd bunny-demo
@@ -24,7 +24,14 @@ bin/console bunny:config <api-key> >> .env.local
 bin/console bunny:list
 ```
 
-Edit .env.local and add your API key.
+You can browse interactively with the basic admin controller.
+
+```bash
+composer require survos/simple-datatables-bundle
+symfony open:local --path=/bunny
+```
+
+Or edit .env.local and add your API key.
 
 As each storage zone has its own passwords and id, these need to be configured individually in survos_bunny.yaml.  Rather than tediously configuring each zone by cutting and pasting, we can use the first utility to dump the configuration with just the main api key.  This saves you from having to go to  https://dash.bunny.net/storage and go to each storage zone, then click on it and select "FTP and ApiAccess" and selecting each key.
 

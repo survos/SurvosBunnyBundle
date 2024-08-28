@@ -20,6 +20,7 @@ Create a new Symfony project.
 ```bash
 symfony new bunny-demo --webapp && cd bunny-demo
 composer require survos/bunny-bundle
+0df72e6f-01e3-44c8-801f-fa502b302179
 bin/console bunny:config <api-key> >> .env.local 
 bin/console bunny:list
 ```

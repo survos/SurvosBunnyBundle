@@ -29,7 +29,7 @@
         "symfony/phpunit-bridge": "^6.4 || ^7.0",
         "symfony/twig-bundle": "^6.4 || ^7.0",
         "symfony/var-dumper": "^6.4 || ^7.0",
-        "survos/simple-datatables-bundle": "^1.5.310"
+        "survos/simple-datatables-bundle": "^1.5.311"
     },
     "suggest": {
         "survos/simple-datatables-bundle": "searchable/sortable tables when browsing"

@@ -15,8 +15,8 @@ use Zenstruck\Console\IO;
 use Zenstruck\Console\RunsCommands;
 use Zenstruck\Console\RunsProcesses;
 
-#[AsCommand('bunny:sync', 'sync local/remote bunny files')]
-final class BunnySyncCommand extends InvokableServiceCommand
+#[AsCommand('bunny:upload', 'upload remote bunny files')]
+final class BunnyUploadCommand extends InvokableServiceCommand
 {
     use RunsCommands;
     use RunsProcesses;
@@ -32,18 +32,19 @@ final class BunnySyncCommand extends InvokableServiceCommand
 
     public function __invoke(
         IO                                                                                          $io,
-        #[Argument(description: 'object/file name')] string        $filename='',
+        #[Argument(description: 'file name to upload')] string        $filename='',
         #[Argument(description: 'path name within zone')] string        $path='',
-        #[Argument(description: 'zone name')] ?string        $zoneName=null,
-        #[Argument(description: 'dir')] ?string        $relativeDir='.',
+        #[Option(description: 'zone name')] ?string        $zoneName=null,
+        #[Option(description: 'dir')] ?string        $relativeDir='.',
 
     ): int
     {
-        $downloadedDir = $relativeDir . $path;
-        if (!is_dir($downloadedDir)) {
-            mkdir($downloadedDir, 0777, true);
+        $localDir = $relativeDir . $path;
+        if (!is_dir($relativeDir)) {
+            $io->error($relativeDir . ' is not a directory');
+            return self::FAILURE;
         }
-        $downloadedFilename = $downloadedDir . $filename;
+        $localFilename = $localDir . $filename;
         // if no zone, we could prompt
         $baseApi = $this->bunnyService->getBaseApi();
         if (!$zoneName) {
@@ -53,11 +54,11 @@ final class BunnySyncCommand extends InvokableServiceCommand
         // how to get the password from a zone?
 
         $ret = $this->bunnyService->downloadFile($filename, $path, $zoneName);
-        file_put_contents($downloadedFilename, $ret->getContents());
+        file_put_contents($localFilename, $ret->getContents());
 
         // @todo: download dir default, etc.
 
-        $io->success($this->getName() . ': downloaded to ' . $downloadedFilename);
+        $io->success($this->getName() . ': downloaded to ' . $localFilename);
         return self::SUCCESS;
     }
 

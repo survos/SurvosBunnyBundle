@@ -6,7 +6,8 @@ namespace Survos\BunnyBundle;
 
 use Survos\BunnyBundle\Command\BunnyConfigCommand;
 use Survos\BunnyBundle\Command\BunnyListCommand;
-use Survos\BunnyBundle\Command\BunnySyncCommand;
+use Survos\BunnyBundle\Command\BunnyDownloadCommand;
+use Survos\BunnyBundle\Command\BunnyUploadCommand;
 use Survos\BunnyBundle\Controller\BunnyController;
 use Survos\BunnyBundle\Service\BunnyService;
 use Survos\SimpleDatatables\SurvosSimpleDatatablesBundle;
@@ -41,7 +42,7 @@ class SurvosBunnyBundle extends AbstractBundle
             ->addTag('controller.service_arguments')
         ;
 
-        foreach ([BunnyConfigCommand::class, BunnyListCommand::class, BunnySyncCommand::class] as $commandName) {
+        foreach ([BunnyConfigCommand::class, BunnyListCommand::class, BunnyUploadCommand::class, BunnyDownloadCommand::class] as $commandName) {
             $builder->autowire($commandName)
                 ->setAutoconfigured(true)
                 ->addTag('console.command')

@@ -38,10 +38,9 @@ class BunnyController extends AbstractController
     #[Template('@SurvosBunny/zone.html.twig')]
     public function download(string $zoneName, string $path, string $fileName): Response
     {
-        // @todo
-        dd(get_defined_vars());
+
         $response = $this->bunnyService->downloadFile($fileName,$path,$zoneName);
-        dd($response);
+        return new Response($response); // eh
     }
 
 

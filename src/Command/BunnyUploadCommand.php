@@ -22,24 +22,21 @@ final class BunnyUploadCommand extends InvokableServiceCommand
     use RunsProcesses;
 
     public function __construct(
-        private LoggerInterface       $logger,
+        private LoggerInterface $logger,
         private ParameterBagInterface $bag,
         private readonly BunnyService $bunnyService,
-    )
-    {
+    ) {
         parent::__construct();
     }
 
     public function __invoke(
-        IO                                                                                          $io,
-        #[Argument(description: 'file name to upload')] string        $filename='',
-        #[Argument(description: 'path name within zone')] string        $path='',
-        #[Option(description: 'zone name')] ?string        $zoneName=null,
-        #[Option(description: 'dir')] ?string        $relativeDir='.',
-
-    ): int
-    {
-        $localDir = $relativeDir . $path;
+        IO $io,
+        #[Argument(description: 'file name to upload')] string $filename = '',
+        #[Argument(description: 'path name within zone')] string $path = '',
+        #[Option(description: 'zone name')] ?string $zoneName = null,
+        #[Option(description: 'dir')] ?string $relativeDir = './',
+    ): int {
+        $localDir = $relativeDir; //  . $path;
         if (!is_dir($relativeDir)) {
             $io->error($relativeDir . ' is not a directory');
             return self::FAILURE;
@@ -52,17 +49,21 @@ final class BunnyUploadCommand extends InvokableServiceCommand
         }
 
         // how to get the password from a zone?
+        assert(file_exists($localFilename), $localFilename);
+        $content = file_get_contents($localFilename);
 
-        $ret = $this->bunnyService->downloadFile($filename, $path, $zoneName);
-        file_put_contents($localFilename, $ret->getContents());
+        $ret = $this->bunnyService->uploadFile(
+            $filename,
+            $zoneName,
+            body: $content,
+            path: $path
+        );
+
+        dd($ret);
 
         // @todo: download dir default, etc.
 
         $io->success($this->getName() . ': downloaded to ' . $localFilename);
         return self::SUCCESS;
     }
-
-
-
-
 }

@@ -51,7 +51,9 @@ final class BunnyUploadCommand extends InvokableServiceCommand
         // how to get the password from a zone?
         assert(file_exists($localFilename), $localFilename);
         $content = file_get_contents($localFilename);
-
+        $filename = basename($localFilename);
+        $this->logger->info("Uploading $filename to $zoneName ($path)");
+//        dd($filename);
         $ret = $this->bunnyService->uploadFile(
             $filename,
             $zoneName,
@@ -59,11 +61,12 @@ final class BunnyUploadCommand extends InvokableServiceCommand
             path: $path
         );
 
-        dd($ret);
+        $io->success($localFilename . ' has been uploaded to ' .$filename );
+        dump($ret);
 
         // @todo: download dir default, etc.
 
-        $io->success($this->getName() . ': downloaded to ' . $localFilename);
+        $io->success($this->getName() . 'finished');
         return self::SUCCESS;
     }
 }

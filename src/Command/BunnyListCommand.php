@@ -63,6 +63,7 @@ final class BunnyListCommand extends InvokableServiceCommand
         if (!$zoneName) {
             $zoneName = $this->bunnyService->getStorageZone();
         }
+        assert($zoneName, "missing zone name");
 
         $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
         $list = $edgeStorageApi->listFiles(

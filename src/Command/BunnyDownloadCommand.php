@@ -44,37 +44,41 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
             $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
             if (str_ends_with($localDirOrFilename, '/')) {
                 $downloadFilename = $localDirOrFilename . $shortFilename;
-                $downloadedDir = trim($localDirOrFilename, '/');
+                $downloadDir = trim($localDirOrFilename, '/');
             } else {
-                $downloadedDir = trim($localDirOrFilename, '/');
-                $downloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
+                $downloadDir = pathinfo($downloadFilename, PATHINFO_DIRNAME);
+                if ($downloadDir === '.') {
+//                    $downloadDir = '';
+                }
+                $downloadFilename = $localDirOrFilename; // pathinfo($remoteFilename, PATHINFO_BASENAME);
                 // it's a filename
             }
         } else {
-            $downloadFilename = pathinfo($remoteFilename, PATHINFO_FILENAME);
-
+            $downloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
+            $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
         }
 
-        dd($downloadedDir, $downloadFilename);
-        if (!is_dir($downloadedDir)) {
-            mkdir($downloadedDir, 0777, true);
+        if ($downloadDir && !is_dir($downloadDir)) {
+            mkdir($downloadDir, 0777, true);
         }
-        $downloadedFilename = $downloadedDir . $filename;
+        $downloadPath = $downloadDir . "/" . $downloadFilename;
         // if no zone, we could prompt
-        $baseApi = $this->bunnyService->getBaseApi();
         if (!$zoneName) {
             $zoneName = $this->bunnyService->getStorageZone();
         }
-        dd($zoneName);
 
         // how to get the password from a zone?
 
-        $ret = $this->bunnyService->downloadFile($filename, $path, $zoneName);
-        file_put_contents($downloadedFilename, $ret->getContents());
+        $remotePath = pathinfo($remoteFilename, PATHINFO_DIRNAME);
+        $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
+        dump($remoteFilename, $remotePath, $remoteShortName);
+
+        $ret = $this->bunnyService->downloadFile($remoteShortName, $remotePath, $zoneName);
+        file_put_contents($downloadPath, $ret->getContents());
 
         // @todo: download dir default, etc.
 
-        $io->success($this->getName() . ': downloaded to ' . $downloadedFilename);
+        $io->success($this->getName() . ': downloaded to ' . $downloadPath);
         return self::SUCCESS;
     }
 

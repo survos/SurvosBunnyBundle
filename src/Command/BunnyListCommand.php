@@ -31,14 +31,19 @@ final class BunnyListCommand extends InvokableServiceCommand
 
     public function __invoke(
         IO                                                                                          $io,
-        #[Argument(description: 'zone name')] ?string        $zoneName=null,
         #[Argument(description: 'path name within zone')] string        $path='',
+        #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
+        #[Option(name: 'zones', description: 'list the zone names')] bool $listZones = false,
 
     ): int
     {
-        // if no zone, we could prompt
-        $baseApi = $this->bunnyService->getBaseApi();
-        if (!$zoneName) {
+        if ($listZones) {
+            // if no zone, we could prompt
+            if (!$baseApi = $this->bunnyService->getBaseApi()) {
+                $io->error("Listing zones requires a base api key");
+                return self::FAILURE;
+            }
+
             $zones = $baseApi->listStorageZones()->getContents();
             $table = new Table($io);
             $table->setHeaderTitle($zoneName . "/" . $path);
@@ -55,15 +60,11 @@ final class BunnyListCommand extends InvokableServiceCommand
             return self::SUCCESS;
         }
 
-        $edgeStorageApi = $this->bunnyService->getEdgeApi();
-        $list = $edgeStorageApi->listFiles(
-            storageZoneName: $zoneName,
-            path: $path
-        );
+        if (!$zoneName) {
+            $zoneName = $this->bunnyService->getStorageZone();
+        }
 
-//        $zone = $baseApi->getStorageZone($id)->getContents();
-//        $accessKey = $zone['ReadOnlyPassword'];
-        $edgeStorageApi = $this->bunnyService->getEdgeApi();
+        $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
         $list = $edgeStorageApi->listFiles(
             storageZoneName: $zoneName,
             path: $path

@@ -31,6 +31,7 @@ class BunnyService
         //        private ?string $password = null, // for writing
         private ?EdgeStorageAPI $edgeStorageApi = null,
         private ?string $storageZone = null,
+        private array $zones=[]
     ) {
 // Create a BunnyClient using any HTTP client implementing "Psr\Http\Client\ClientInterface".
         $this->bunnyClient = new BunnyClient(
@@ -38,6 +39,9 @@ class BunnyService
         );
         if (!$this->storageZone) {
             $this->storageZone = $this->config['storage_zone'];
+        }
+        foreach ($this->config['zones'] as $zoneData) {
+            $this->zones[$zoneData['name']] = $zoneData;
         }
     }
 
@@ -100,18 +104,20 @@ class BunnyService
     public function getEdgeApi(string $storageZone = null, bool $writeAccess = false): EdgeStorageAPI
     {
         if (!$storageZone = $storageZone ?? $this->getStorageZone()) {
-            if (count($this->config['zones']) >= 1) {
-                $storageZone = array_key_first($this->config['zones']);
+            if (!$storageZone = $this->config['storage_zone']) {
+                if (count($this->config['zones']) >= 1) {
+                    $storageZone = $this->config['zones'][0]['name'];
+               }
             }
         }
         assert($storageZone, "Missing storageZone!");
 
         if (!$this->edgeStorageApi) {
-            $password = $this->config['zones'][$storageZone][$writeAccess ? 'password' : 'readonly_password'];
+            $password = $this->zones[$storageZone][$writeAccess ? 'password' : 'readonly_password'];
             $this->edgeStorageApi = new EdgeStorageAPI(
                 apiKey: $password,
                 client: $this->bunnyClient,
-                region: Region::NY // from($this->config['region']) # Region::NY # $this->config['region']
+                region: Region::from($this->zones[$storageZone]['region'])
             );
         }
 

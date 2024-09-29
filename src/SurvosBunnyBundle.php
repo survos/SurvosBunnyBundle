@@ -66,6 +66,7 @@ class SurvosBunnyBundle extends AbstractBundle
             ->arrayNode('zones')
             ->arrayPrototype()
             ->children()
+                ->scalarNode('name')->end()
                 ->scalarNode('id')->end()
                 ->scalarNode('region')->end()
                 ->scalarNode('readonly_password')->end()
@@ -83,9 +84,9 @@ class SurvosBunnyBundle extends AbstractBundle
             ->children()
                 ->scalarNode('api_key')->defaultNull()->end()
                 ->scalarNode('storage_zone')->defaultValue(null)->end()
-                ->scalarNode('region')->defaultValue(null)->end()
-                ->scalarNode('readonly_password')->defaultValue(null)->end()
-                ->scalarNode('password')->defaultValue(null)->end()
+//                ->scalarNode('region')->defaultValue(null)->end()
+//                ->scalarNode('readonly_password')->defaultValue(null)->end()
+//                ->scalarNode('password')->defaultValue(null)->end()
             ->end();
 
         $this->addZonesSection($rootNode);

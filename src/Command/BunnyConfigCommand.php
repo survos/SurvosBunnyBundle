@@ -36,6 +36,8 @@ final class BunnyConfigCommand extends InvokableServiceCommand
     public function __invoke(
         IO                                                                                          $io,
         #[Argument(description: 'api key')] ?string        $apiKey=null,
+        #[Option(description: "Overwrite the survos_button.yaml config file")] bool $force=false,
+        #[Option(name: 'zone', description: 'limit configuration to just one zone')] ?string $zoneName = null,
 
     ): int
     {
@@ -51,24 +53,30 @@ final class BunnyConfigCommand extends InvokableServiceCommand
             $zoneConfig = [];
             $env[] = "BUNNY_API_KEY=$apiKey";
             foreach ($zones as $zone) {
-                $zoneName = strtoupper($zone['Name']);
+                if ($zoneName && ($zoneName !== $zone['Name'])) {
+                    continue;
+                }
+                $zoneConstant = strtoupper($zone['Name']);
                 // inject slugger?  Or try to avoid dependencies?
-                $zoneName = str_replace('-', '_', $zoneName);
-                $zoneConfig[$zone['Name']] = [
+//                $zoneName = str_replace('-', '_', $zoneName);
+                $zoneConfig[] = [
+                    'name' => $zone['Name'],
                     'id' => $zone['Id'],
                     'region' => $zone['Region'],
-                    'readonly_password' => "%env(BUNNY_{$zoneName}_READONLY_PASSWORD)%"
+                    'readonly_password' => "%env(BUNNY_{$zoneConstant}_READONLY_PASSWORD)%"
                 ];
-                $env[] = "BUNNY_{$zoneName}_READONLY_PASSWORD=" . $zone['ReadOnlyPassword'];
-                $env[] = "BUNNY_{$zoneName}_PASSWORD=" . $zone['Password'];
+                $env[] = "BUNNY_{$zoneConstant}_READONLY_PASSWORD=" . $zone['ReadOnlyPassword'];
+                $env[] = "BUNNY_{$zoneConstant}_PASSWORD=" . $zone['Password'];
             }
             $config['survos_bunny'] = [
                 'api_key' => "%env(BUNNY_API_KEY)%",
                 'zones' => $zoneConfig,
             ];
 
-        file_put_contents($filename = $this->projectDir . '/config/packages/survos_bunny.yaml', Yaml::dump($config, inline: 4   ));
-//        $io->success($filename . ' written, add these to your environment, e.g. .env.local or the vault');
+        if ($force) {
+            file_put_contents($filename = $this->projectDir . '/config/packages/survos_bunny.yaml', Yaml::dump($config, inline: 4   ));
+            $io->success($filename . ' written, add these to your environment, e.g. .env.local or the vault');
+        }
         $io->writeln($env);
 
         return self::SUCCESS;

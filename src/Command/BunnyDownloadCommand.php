@@ -32,14 +32,30 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
 
     public function __invoke(
         IO                                                                                          $io,
-        #[Argument(description: 'object/file name')] string        $filename='',
-        #[Argument(description: 'path name within zone')] string        $path='',
-        #[Argument(description: 'zone name')] ?string        $zoneName=null,
-        #[Argument(description: 'local directory')] ?string        $relativeDir='.',
+        #[Argument(description: 'path within zone')] string $remoteFilename = '',
+        #[Argument(description: 'local directory')] ?string        $localDirOrFilename='',
+        #[Option(name: 'zone', description: 'zone name')] ?string        $zoneName=null,
 
     ): int
     {
-        $downloadedDir = $relativeDir . $path;
+        $downloadFilename = pathinfo($remoteFilename, PATHINFO_FILENAME);
+
+        if ($localDirOrFilename) {
+            $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
+            if (str_ends_with($localDirOrFilename, '/')) {
+                $downloadFilename = $localDirOrFilename . $shortFilename;
+                $downloadedDir = trim($localDirOrFilename, '/');
+            } else {
+                $downloadedDir = trim($localDirOrFilename, '/');
+                $downloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
+                // it's a filename
+            }
+        } else {
+            $downloadFilename = pathinfo($remoteFilename, PATHINFO_FILENAME);
+
+        }
+
+        dd($downloadedDir, $downloadFilename);
         if (!is_dir($downloadedDir)) {
             mkdir($downloadedDir, 0777, true);
         }
@@ -49,6 +65,7 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
         if (!$zoneName) {
             $zoneName = $this->bunnyService->getStorageZone();
         }
+        dd($zoneName);
 
         // how to get the password from a zone?
 

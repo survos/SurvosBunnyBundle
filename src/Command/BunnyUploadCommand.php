@@ -24,49 +24,75 @@ final class BunnyUploadCommand extends InvokableServiceCommand
     public function __construct(
         private LoggerInterface $logger,
         private ParameterBagInterface $bag,
+        #[Autowire('%kernel.project_dir%')] private string $projectDir,
         private readonly BunnyService $bunnyService,
     ) {
         parent::__construct();
+        $this->setHelp(<<<END
+# if local path is within project, mirror the file structure, otherwise pass it as second argument
+bin/console bunny:upload local/path/filename.zip [remote/path/filename.zip] --zone=zoneName 
+# change name and path
+bin/console bunny:upload local/path/filename.zip remote/path/newFilename.zip 
+# change remote path only, needs slash at the end!
+bin/console bunny:upload local/path/filename.zip remote/path/
+
+remote path is required unless a mirror of local
+END
+    );
     }
 
     public function __invoke(
         IO $io,
         #[Argument(description: 'file name to upload')] string $filename = '',
-        #[Argument(description: 'path name within zone')] string $path = '',
-        #[Option(description: 'zone name')] ?string $zoneName = null,
-        #[Option(description: 'dir')] ?string $relativeDir = './',
+        #[Argument(description: 'path within zone')] string $remoteDirOrFilename = '',
+        #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
+//        #[Option(description: 'dir')] ?string $relativeDir = './',
     ): int {
-        $localDir = $relativeDir; //  . $path;
-        if (!is_dir($relativeDir)) {
-            $io->error($relativeDir . ' is not a directory');
+
+        if (!file_exists($filename)) {
+            $io->error("File $filename does not exist");
             return self::FAILURE;
         }
-        $localFilename = $localDir . $filename;
-        // if no zone, we could prompt
-        $baseApi = $this->bunnyService->getBaseApi();
+
+        $remoteFilename = pathinfo($filename, PATHINFO_BASENAME);
+        if (!$remoteDirOrFilename) {
+            // if the real path contains the project dir, this is a candidate for sync
+            $realPath = realpath($filename);
+            if (str_starts_with($realPath, $this->projectDir)) {
+                $remotePath = pathinfo(
+                    str_replace($this->projectDir . '/', '', $realPath), PATHINFO_DIRNAME);
+                if ($remotePath === '.') {
+                    $remotePath = '';
+                }
+            }
+        } else {
+            // keep the filename but change the dir
+            if (str_ends_with($remoteDirOrFilename, '/')) {
+                $remotePath = $remoteDirOrFilename;
+            }
+        }
+
         if (!$zoneName) {
             $zoneName = $this->bunnyService->getStorageZone();
         }
 
-        // how to get the password from a zone?
-        assert(file_exists($localFilename), $localFilename);
-        $content = file_get_contents($localFilename);
-        $filename = basename($localFilename);
-        $this->logger->info("Uploading $filename to $zoneName ($path)");
-//        dd($filename);
+        $content = file_get_contents($filename);
+
+        // remotePath should have the slash
+        $io->error("Uploading $filename to $zoneName/$remotePath$remoteFilename");
         $ret = $this->bunnyService->uploadFile(
-            $filename,
+            $remoteFilename,
             $zoneName,
             body: $content,
-            path: $path
+            path: $remotePath
         );
 
-        $io->success($localFilename . ' has been uploaded to ' .$filename );
-        dump($ret);
+        $io->info($ret->getStatusCode() . ' ' . $ret->getReasonPhrase());
+        $io->success($filename . " has been uploaded to $zoneName/$remotePath$filename" );
 
         // @todo: download dir default, etc.
 
-        $io->success($this->getName() . 'finished');
+        $io->success($this->getName() . ' finished');
         return self::SUCCESS;
     }
 }

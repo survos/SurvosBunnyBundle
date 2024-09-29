@@ -71,7 +71,6 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
 
         $remotePath = pathinfo($remoteFilename, PATHINFO_DIRNAME);
         $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
-        dump($remoteFilename, $remotePath, $remoteShortName);
 
         $ret = $this->bunnyService->downloadFile($remoteShortName, $remotePath, $zoneName);
         file_put_contents($downloadPath, $ret->getContents());

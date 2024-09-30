@@ -35,7 +35,9 @@ class BunnyService
     ) {
 // Create a BunnyClient using any HTTP client implementing "Psr\Http\Client\ClientInterface".
         $this->bunnyClient = new BunnyClient(
-            client: new \Symfony\Component\HttpClient\Psr18Client(),
+            client: new \Symfony\Component\HttpClient\Psr18Client(
+                client: $this->client
+            ),
         );
         if (!$this->storageZone) {
             $this->storageZone = $this->config['storage_zone'];

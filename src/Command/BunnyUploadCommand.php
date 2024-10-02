@@ -84,10 +84,11 @@ END
             $remoteFilename,
             $zoneName,
             body: $content,
-            path: $remotePath
+            path: $remotePath . '/'
         );
 
         $io->info($ret->getStatusCode() . ' ' . $ret->getReasonPhrase());
+        dump($ret);
         $io->success($filename . " has been uploaded to $zoneName/$remotePath$filename" );
 
         // @todo: download dir default, etc.

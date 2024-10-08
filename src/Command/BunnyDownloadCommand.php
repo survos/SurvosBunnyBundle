@@ -30,6 +30,9 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
         parent::__construct();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function __invoke(
         IO                                                                                          $io,
         #[Argument(description: 'path within zone')] string $remoteFilename = '',
@@ -62,7 +65,6 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
             $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
         }
 
-
         // if unzip, download to the DIR and unzip
         if (pathinfo($localDirOrFilename, PATHINFO_EXTENSION) === 'zip') {
         }
@@ -71,9 +73,8 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
         if ($downloadDir && !is_dir($downloadDir)) {
             mkdir($downloadDir, 0777, true);
         }
-        if ($unzip) {
-            dd("@todo: $downloadDir download $remoteFilename and unzip it to  " . $localDirOrFilename);
-        }
+
+
         $downloadPath = $downloadDir . "/" . $downloadFilename;
         // if no zone, we could prompt
         if (!$zoneName) {
@@ -86,15 +87,32 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
         $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
 
         $ret = $this->bunnyService->downloadFile($remoteShortName, $remotePath, $zoneName);
+
         file_put_contents($downloadPath, $ret->getContents());
 
-        // @todo: download dir default, etc.
+        if ($unzip && pathinfo($remoteFilename, PATHINFO_EXTENSION) === 'zip') {
+            $io->info("Unzipped $downloadPath to $localDirOrFilename");
+            $this->unzipped($downloadPath, $localDirOrFilename);
+            $io->info("Unzipped $downloadPath to $localDirOrFilename done!");
+        }
 
         $io->success($this->getName() . ': downloaded to ' . $downloadPath);
         return self::SUCCESS;
     }
 
-
-
-
+    /**
+     * @param string $zipPath
+     * @param string $destination
+     * @throws \Exception
+     */
+    private function unzipped(string $zipPath, string $destination): void
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath) === true) {
+            $zip->extractTo($destination);
+            $zip->close();
+            return;
+        }
+        throw new \Exception("Could not unzip $zipPath to $destination");
+    }
 }

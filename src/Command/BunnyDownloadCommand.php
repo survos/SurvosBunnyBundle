@@ -35,10 +35,14 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
         #[Argument(description: 'path within zone')] string $remoteFilename = '',
         #[Argument(description: 'local directory')] ?string        $localDirOrFilename='',
         #[Option(name: 'zone', description: 'zone name')] ?string        $zoneName=null,
+        #[Option(description: 'unzip')] ?bool        $unzip=null,
 
     ): int
     {
         $downloadFilename = pathinfo($remoteFilename, PATHINFO_FILENAME);
+        if ($unzip && !str_ends_with($localDirOrFilename, '/')) {
+            $localDirOrFilename .= "/";
+        }
 
         if ($localDirOrFilename) {
             $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
@@ -58,8 +62,17 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
             $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
         }
 
+
+        // if unzip, download to the DIR and unzip
+        if (pathinfo($localDirOrFilename, PATHINFO_EXTENSION) === 'zip') {
+        }
+
+
         if ($downloadDir && !is_dir($downloadDir)) {
             mkdir($downloadDir, 0777, true);
+        }
+        if ($unzip) {
+            dd("@todo: $downloadDir download $remoteFilename and unzip it to  " . $localDirOrFilename);
         }
         $downloadPath = $downloadDir . "/" . $downloadFilename;
         // if no zone, we could prompt

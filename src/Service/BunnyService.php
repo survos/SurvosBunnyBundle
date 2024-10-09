@@ -5,6 +5,7 @@ namespace Survos\BunnyBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Http\Discovery\Psr18Client;
 use Psr\Log\LoggerInterface;
+use Survos\CoreBundle\Service\SurvosUtils;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -43,6 +44,7 @@ class BunnyService
             $this->storageZone = $this->config['storage_zone'];
         }
         foreach ($this->config['zones'] as $zoneData) {
+            SurvosUtils::assertKeyExists('name', $zoneData);
             $this->zones[$zoneData['name']] = $zoneData;
         }
     }
@@ -74,7 +76,7 @@ class BunnyService
         return $this->baseApi;
     }
 
-    public function downloadFile(string $filename, string $path, string $storageZone = null)
+    public function downloadFile(string $filename, string $path, ?string $storageZone = null): BunnyClientResponseInterface
     {
         $ret = $this->getEdgeApi()->downloadFile(
             storageZoneName: $storageZone ?? $this->getStorageZone(),
@@ -87,8 +89,8 @@ class BunnyService
 
     public function uploadFile(
         string $fileName, // the filename on bunny
-        string $storageZoneName,
         mixed $body, // content to write
+        ?string $storageZoneName=null,
         string $path = '',
         array $headers = [],
     ): BunnyClientResponseInterface {
@@ -126,9 +128,9 @@ class BunnyService
         return $this->edgeStorageApi;
     }
 
-    public function getStorageZone(): ?string
+    public function getStorageZone(): string
     {
-        return $this->storageZone;
+        return $this->storageZone?? $this->config['storage_zone'];
     }
 
     public function getBunnyClient()
@@ -157,5 +159,11 @@ class BunnyService
     {
         $this->cache = $cache;
         return $this;
+    }
+
+    public function getZones(): array
+    {
+        return $this->config['zones'];
+
     }
 }

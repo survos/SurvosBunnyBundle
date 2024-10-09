@@ -82,6 +82,8 @@ END
             }
         }
 
+
+
         if (!$zoneName) {
             $zoneName = $this->bunnyService->getStorageZone();
         }
@@ -92,7 +94,7 @@ END
         $io->error("Uploading $filename to $zoneName/$remotePath$remoteFilename");
         $ret = $this->bunnyService->uploadFile(
             $remoteFilename,
-            $zoneName,
+            storageZoneName: $zoneName,
             body: $content,
             path: $remotePath . '/'
         );

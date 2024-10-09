@@ -28,6 +28,12 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
     )
     {
         parent::__construct();
+        $this->setHelp( <<<END
+# downloads to data/composer.json 
+bin/console -vvv bunny:download data/composer.json
+
+END
+);
     }
 
     /**
@@ -39,13 +45,25 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
         #[Argument(description: 'local directory')] ?string        $localDirOrFilename='',
         #[Option(name: 'zone', description: 'zone name')] ?string        $zoneName=null,
         #[Option(description: 'unzip')] ?bool        $unzip=null,
+        #[Option(description: 'download even if file exists')] bool        $force=false,
 
     ): int
     {
-        $downloadFilename = pathinfo($remoteFilename, PATHINFO_FILENAME);
-        if ($unzip && !str_ends_with($localDirOrFilename, '/')) {
-            $localDirOrFilename .= "/";
+
+        // e.g. glam.zip
+        $shortDownloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
+        if ($unzip) {
+            if (pathinfo($remoteFilename, PATHINFO_EXTENSION) !== 'zip') {
+                $io->error("Only zip files are supported");
+                return self::FAILURE;
+            }
         }
+
+//        if ($localDirOrFilename == '' ) {
+//            $localDirOrFilename = pathinfo($remoteFilename, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
+//
+//            // if it's a zip file, the default path is the same name without the .zip
+//        }
 
         if ($localDirOrFilename) {
             $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
@@ -53,50 +71,64 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
                 $downloadFilename = $localDirOrFilename . $shortFilename;
                 $downloadDir = trim($localDirOrFilename, '/');
             } else {
-                $downloadDir = pathinfo($downloadFilename, PATHINFO_DIRNAME);
-                if ($downloadDir === '.') {
-//                    $downloadDir = '';
-                }
-                $downloadFilename = $localDirOrFilename; // pathinfo($remoteFilename, PATHINFO_BASENAME);
                 // it's a filename
+                $downloadDir = pathinfo($localDirOrFilename, PATHINFO_DIRNAME);
+                if ($downloadDir === '.') {
+                    $downloadDir = '';
+                }
+                $shortDownloadFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
+//                dd($downloadDir, $localDirOrFilename);
             }
         } else {
-            $downloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
             $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
         }
-
-        // if unzip, download to the DIR and unzip
-        if (pathinfo($localDirOrFilename, PATHINFO_EXTENSION) === 'zip') {
-        }
-
+        dump(downloadDir: $downloadDir, localDirAsPassedIn: $localDirOrFilename, localFilename: $shortDownloadFilename);
 
         if ($downloadDir && !is_dir($downloadDir)) {
+            $io->info("Creating $downloadDir");
             mkdir($downloadDir, 0777, true);
         }
 
-
-        $downloadPath = $downloadDir . "/" . $downloadFilename;
-        // if no zone, we could prompt
-        if (!$zoneName) {
-            $zoneName = $this->bunnyService->getStorageZone();
+        if ($unzip && !str_ends_with($localDirOrFilename, '/')) {
+            $localDirOrFilename .= "/";
         }
 
-        // how to get the password from a zone?
+        $downloadPath = $downloadDir
+            ? ($downloadDir . DIRECTORY_SEPARATOR) . $shortDownloadFilename
+            : $shortDownloadFilename;
+        if ($force || !file_exists($downloadPath)) {
+            $remotePath = pathinfo($remoteFilename, PATHINFO_DIRNAME);
+            $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
 
-        $remotePath = pathinfo($remoteFilename, PATHINFO_DIRNAME);
-        $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
+            if ($downloadDir && !file_exists($downloadDir)) {
+                dd("create $downloadDir dir?");
+            }
 
-        $ret = $this->bunnyService->downloadFile($remoteShortName, $remotePath, $zoneName);
+            $io->info("Downloading $remoteShortName at $remotePath to  $downloadPath");
+//            dump(realPath: $downloadPath, filename: $shortDownloadFilename);
+            $ret = $this->bunnyService->downloadFile($remoteShortName, $remotePath, $zoneName);
+            file_put_contents($downloadPath, $ret->getContents());
+            $size = filesize($downloadPath);
+            $io->info("$downloadPath written with $size bytes");
+        }
 
-        file_put_contents($downloadPath, $ret->getContents());
+        $io->success($this->getName() . ': downloaded to ' . realpath($downloadPath));
 
         if ($unzip && pathinfo($remoteFilename, PATHINFO_EXTENSION) === 'zip') {
             $io->info("Unzipped $downloadPath to $localDirOrFilename");
-            $this->unzipped($downloadPath, $localDirOrFilename);
-            $io->info("Unzipped $downloadPath to $localDirOrFilename done!");
+            $dir = $downloadDir . DIRECTORY_SEPARATOR . pathinfo($downloadPath, PATHINFO_FILENAME);
+            $io->info("Unzipping $downloadPath to $dir");
+            $this->unzip($downloadPath, $dir);
+
+            $table = new Table($io);
+            $table->setStyle('compact');
+            $table->setHeaders(['name','size']);
+            foreach (glob($dir . '/*') as $file) {
+                $table->addRow([basename($file), filesize($file)]);
+            }
+            $table->render();
         }
 
-        $io->success($this->getName() . ': downloaded to ' . $downloadPath);
         return self::SUCCESS;
     }
 
@@ -105,14 +137,17 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
      * @param string $destination
      * @throws \Exception
      */
-    private function unzipped(string $zipPath, string $destination): void
+    private function unzip(string $zipPath, string $destination): void
     {
         $zip = new \ZipArchive();
-        if ($zip->open($zipPath) === true) {
-            $zip->extractTo($destination);
-            $zip->close();
-            return;
+        try {
+            if ($zip->open($zipPath) === true) {
+                $zip->extractTo($destination);
+                $zip->close();
+            }
+        } catch (\Exception $e) {
+            $this->io()->error($e->getMessage());
+            throw new \Exception("Could not unzip $zipPath to $destination");
         }
-        throw new \Exception("Could not unzip $zipPath to $destination");
     }
 }

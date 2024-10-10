@@ -64,6 +64,7 @@ END
         $zipPath = $this->createZip($filename);
 
         $remoteFilename = pathinfo($filename, PATHINFO_BASENAME);
+        $remotePath = $remoteDirOrFilename;
 
         if (!$remoteDirOrFilename) {
             // if the real path contains the project dir, this is a candidate for sync

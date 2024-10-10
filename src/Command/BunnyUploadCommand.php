@@ -52,16 +52,23 @@ END
         #[Argument(description: 'file name to upload')] string $filename = '',
         #[Argument(description: 'path within zone')] string $remoteDirOrFilename = '',
         #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
-        #[Option(name: 'zip', description: 'isZip?')] ?string $zip = null,
+        #[Option(name: 'zip', description: 'isZip?')] ?bool $zip = null,
 //        #[Option(description: 'dir')] ?string $relativeDir = './',
     ): int {
-
+        $io->info($this->getName() . ' started');
         if (!file_exists($filename)) {
             $io->error("File $filename does not exist");
             return self::FAILURE;
         }
 
-        $zipPath = $this->createZip($filename);
+        if(!$zip && is_dir($filename)) {
+            $io->error("Please specify --zip for directories");
+            return self::FAILURE;
+        }
+
+        if($zip) {
+            $filename = $this->createZip($filename);
+        }
 
         $remoteFilename = pathinfo($filename, PATHINFO_BASENAME);
         $remotePath = $remoteDirOrFilename;
@@ -83,16 +90,15 @@ END
             }
         }
 
-
-
         if (!$zoneName) {
             $zoneName = $this->bunnyService->getStorageZone();
         }
 
-        $content = file_get_contents($zipPath);
+        $content = file_get_contents($filename);
 
         // remotePath should have the slash
-        $io->error("Uploading $filename to $zoneName/$remotePath$remoteFilename");
+        $io->info("Uploading $filename to $zoneName/$remotePath$remoteFilename");
+
         $ret = $this->bunnyService->uploadFile(
             $remoteFilename,
             storageZoneName: $zoneName,
@@ -101,7 +107,7 @@ END
         );
 
         $io->info($ret->getStatusCode() . ' ' . $ret->getReasonPhrase());
-        dump($ret);
+
         $io->success($filename . " has been uploaded to $zoneName/$remotePath$filename" );
 
         // @todo: download dir default, etc.
@@ -172,7 +178,11 @@ END
     private function createZipFolder(string $folder): string
     {
         $fullFolderPath = $this->adjustFilePath($folder);
-        $zipFileName = $this->getZipPath($fullFolderPath);
+
+        $updatedPath = rtrim($fullFolderPath, '/');
+        $zipFileName = explode( '/', $updatedPath);
+
+        $zipFileName = $this->getZipPath($updatedPath.'/'.end($zipFileName));
 
         $zip = new \ZipArchive();
 

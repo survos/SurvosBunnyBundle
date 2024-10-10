@@ -49,9 +49,6 @@ END
 
     ): int
     {
-
-        // e.g. glam.zip
-        $shortDownloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
         if ($unzip) {
             if (pathinfo($remoteFilename, PATHINFO_EXTENSION) !== 'zip') {
                 $io->error("Only zip files are supported");
@@ -59,12 +56,7 @@ END
             }
         }
 
-//        if ($localDirOrFilename == '' ) {
-//            $localDirOrFilename = pathinfo($remoteFilename, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
-//
-//            // if it's a zip file, the default path is the same name without the .zip
-//        }
-
+        $shortDownloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
         if ($localDirOrFilename) {
             $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
             if (str_ends_with($localDirOrFilename, '/')) {

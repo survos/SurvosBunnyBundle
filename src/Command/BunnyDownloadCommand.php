@@ -2,6 +2,7 @@
 
 namespace Survos\BunnyBundle\Command;
 
+use Exception;
 use Psr\Log\LoggerInterface;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -14,6 +15,7 @@ use Zenstruck\Console\InvokableServiceCommand;
 use Zenstruck\Console\IO;
 use Zenstruck\Console\RunsCommands;
 use Zenstruck\Console\RunsProcesses;
+use ZipArchive;
 
 #[AsCommand('bunny:download', 'download remote bunny files')]
 final class BunnyDownloadCommand extends InvokableServiceCommand
@@ -22,33 +24,33 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
     use RunsProcesses;
 
     public function __construct(
-        private LoggerInterface       $logger,
+        private LoggerInterface $logger,
         private ParameterBagInterface $bag,
         private readonly BunnyService $bunnyService,
-    )
-    {
+        #[Autowire('%kernel.project_dir%')] private $projectDir,
+    ) {
         parent::__construct();
-        $this->setHelp( <<<END
+        $this->setHelp(
+            <<<END
 # downloads to data/composer.json 
 bin/console -vvv bunny:download data/composer.json
 
 END
-);
+        );
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function __invoke(
-        IO                                                                                          $io,
+        IO $io,
         #[Argument(description: 'path within zone')] string $remoteFilename = '',
-        #[Argument(description: 'local directory')] ?string        $localDirOrFilename='',
-        #[Option(name: 'zone', description: 'zone name')] ?string        $zoneName=null,
-        #[Option(description: 'unzip')] ?bool        $unzip=null,
-        #[Option(description: 'download even if file exists')] bool        $force=false,
+        #[Argument(description: 'local directory')] ?string $localDirOrFilename = '',
+        #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
+        #[Option(description: 'unzip')] ?bool $unzip = null,
+        #[Option(description: 'download even if file exists')] bool $force = false,
 
-    ): int
-    {
+    ): int {
         if ($unzip) {
             if (pathinfo($remoteFilename, PATHINFO_EXTENSION) !== 'zip') {
                 $io->error("Only zip files are supported");
@@ -57,24 +59,11 @@ END
         }
 
         $shortDownloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
-        if ($localDirOrFilename) {
-            $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
-            if (str_ends_with($localDirOrFilename, '/')) {
-                $downloadFilename = $localDirOrFilename . $shortFilename;
-                $downloadDir = trim($localDirOrFilename, '/');
-            } else {
-                // it's a filename
-                $downloadDir = pathinfo($localDirOrFilename, PATHINFO_DIRNAME);
-                if ($downloadDir === '.') {
-                    $downloadDir = '';
-                }
-                $shortDownloadFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
-//                dd($downloadDir, $localDirOrFilename);
-            }
-        } else {
-            $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
-        }
-        dump(downloadDir: $downloadDir, localDirAsPassedIn: $localDirOrFilename, localFilename: $shortDownloadFilename);
+        [$downloadDir, $shortDownloadFilename] = $this->sanitizeLocalDir(
+            $remoteFilename,
+            $shortDownloadFilename,
+            $localDirOrFilename
+        );
 
         if ($downloadDir && !is_dir($downloadDir)) {
             $io->info("Creating $downloadDir");
@@ -85,16 +74,10 @@ END
             $localDirOrFilename .= "/";
         }
 
-        $downloadPath = $downloadDir
-            ? ($downloadDir . DIRECTORY_SEPARATOR) . $shortDownloadFilename
-            : $shortDownloadFilename;
+        $downloadPath = $downloadDir ? ($downloadDir . DIRECTORY_SEPARATOR) . $shortDownloadFilename : $shortDownloadFilename;
         if ($force || !file_exists($downloadPath)) {
             $remotePath = pathinfo($remoteFilename, PATHINFO_DIRNAME);
             $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
-
-            if ($downloadDir && !file_exists($downloadDir)) {
-                dd("create $downloadDir dir?");
-            }
 
             $io->info("Downloading $remoteShortName at $remotePath to  $downloadPath");
 //            dump(realPath: $downloadPath, filename: $shortDownloadFilename);
@@ -114,7 +97,7 @@ END
 
             $table = new Table($io);
             $table->setStyle('compact');
-            $table->setHeaders(['name','size']);
+            $table->setHeaders(['name', 'size']);
             foreach (glob($dir . '/*') as $file) {
                 $table->addRow([basename($file), filesize($file)]);
             }
@@ -124,22 +107,51 @@ END
         return self::SUCCESS;
     }
 
+    private function sanitizeLocalDir(
+        string $remoteFilename,
+        string $shortDownloadFilename,
+        string $localDirOrFilename = ""
+    ): array {
+        if ($localDirOrFilename) {
+            $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
+            if (str_ends_with($localDirOrFilename, '/')) {
+                $downloadFilename = $localDirOrFilename . $shortFilename;
+                $downloadDir = trim($localDirOrFilename, '/');
+            } else {
+                // it's a filename
+                $downloadDir = pathinfo($localDirOrFilename, PATHINFO_DIRNAME);
+                if ($downloadDir === '.') {
+                    $downloadDir = '';
+                }
+                $shortDownloadFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
+            }
+        } else {
+            $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
+        }
+
+        if (strpos($downloadDir, '/') !== 0) {
+            // The string does not start with a '/', prepend $this->projectDir
+            $downloadDir = $this->projectDir . '/' . $downloadDir;
+        }
+        return [$downloadDir, $shortDownloadFilename];
+    }
+
     /**
      * @param string $zipPath
      * @param string $destination
-     * @throws \Exception
+     * @throws Exception
      */
     private function unzip(string $zipPath, string $destination): void
     {
-        $zip = new \ZipArchive();
+        $zip = new ZipArchive();
         try {
             if ($zip->open($zipPath) === true) {
                 $zip->extractTo($destination);
                 $zip->close();
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->io()->error($e->getMessage());
-            throw new \Exception("Could not unzip $zipPath to $destination");
+            throw new Exception("Could not unzip $zipPath to $destination");
         }
     }
 }

@@ -7,6 +7,7 @@ use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Zenstruck\Bytes;
 use Zenstruck\Console\Attribute\Argument;
 use Zenstruck\Console\Attribute\Option;
 use Zenstruck\Console\InvokableServiceCommand;
@@ -80,6 +81,7 @@ final class BunnyListCommand extends InvokableServiceCommand
             foreach ($headers as $header) {
                 $row[$header] = $file[$header];
             }
+            $row['Length'] = Bytes::parse($row['Length']); // "389.79 GB"
             $table->addRow($row);
         }
         $table->render();

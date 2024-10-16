@@ -55,6 +55,9 @@ final class BunnyListCommand extends InvokableServiceCommand
                 foreach ($headers as $header) {
                     $row[$header] = $zone[$header];
                 }
+                $id = $row['Id'];
+                $row['Id'] = "<href=https://dash.bunny.net/storage/$id/file-manager>$id</>";
+
                 $table->addRow($row);
             }
             $table->render();
@@ -72,20 +75,22 @@ final class BunnyListCommand extends InvokableServiceCommand
             path: $path
         )->getContents();
 
+        // @todo: see if https://www.php.net/manual/en/class.numberformatter.php works to remove the dependency
         $table = new Table($io);
         $table->setHeaderTitle($zoneName . "/" . $path);
-        $headers = ['ObjectName', 'Path','Length'];
+        $headers = ['ObjectName', 'Path','Length', 'Url'];
         $table->setHeaders($headers);
         foreach ($list as $file) {
             $row = [];
             foreach ($headers as $header) {
-                $row[$header] = $file[$header];
+                $row[$header] = $file[$header]??null;
             }
             $row['Length'] = Bytes::parse($row['Length']); // "389.79 GB"
+            $row['Url'] = "<href=https://symfony.com>Symfony Homepage</>";
             $table->addRow($row);
         }
         $table->render();
-
+        $this->io()->output()->writeln('<href=https://symfony.com>Symfony Homepage</>');
 
         $io->success($this->getName() . ' success ' . $zoneName);
         return self::SUCCESS;

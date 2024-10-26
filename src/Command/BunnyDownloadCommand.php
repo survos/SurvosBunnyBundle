@@ -59,22 +59,34 @@ END
         }
 
         $shortDownloadFilename = pathinfo($remoteFilename, PATHINFO_BASENAME);
-        [$downloadDir, $shortDownloadFilename] = $this->sanitizeLocalDir(
+
+        $downloadDir = $this->sanitizeLocalDir(
             $remoteFilename,
-            $shortDownloadFilename,
             $localDirOrFilename
         );
 
+        if(!str_ends_with($downloadDir, '/')) {
+            $downloadDir .= '/';
+        }
+
+        $filename = (pathinfo($localDirOrFilename, PATHINFO_EXTENSION)) ? basename($localDirOrFilename) : null;
+
         if ($downloadDir && !is_dir($downloadDir)) {
-            $io->info("Creating $downloadDir");
+            $io->info("Creating ".$downloadDir);
             mkdir($downloadDir, 0777, true);
         }
 
-        if ($unzip && !str_ends_with($localDirOrFilename, '/')) {
-            $localDirOrFilename .= "/";
+        if (!str_ends_with($downloadDir, '/')) {
+            $downloadDir .= "/";
         }
 
-        $downloadPath = $downloadDir ? ($downloadDir . DIRECTORY_SEPARATOR) . $shortDownloadFilename : $shortDownloadFilename;
+        if($filename) {
+            $downloadPath =  $downloadDir . $filename;
+        } else {
+            $downloadPath = $downloadDir ? $downloadDir . $shortDownloadFilename : $shortDownloadFilename;
+        }
+
+        $downloadPath = $this->clearDirPath($downloadPath);
         if ($force || !file_exists($downloadPath)) {
             $remotePath = pathinfo($remoteFilename, PATHINFO_DIRNAME);
             $remoteShortName = pathinfo($remoteFilename, PATHINFO_BASENAME);
@@ -109,21 +121,19 @@ END
 
     private function sanitizeLocalDir(
         string $remoteFilename,
-        string $shortDownloadFilename,
         string $localDirOrFilename = ""
-    ): array {
+    ): string {
         if ($localDirOrFilename) {
             $shortFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
-            if (str_ends_with($localDirOrFilename, '/')) {
+            if (str_ends_with($localDirOrFilename, '/') || !pathinfo($localDirOrFilename, PATHINFO_EXTENSION)) {
                 $downloadFilename = $localDirOrFilename . $shortFilename;
-                $downloadDir = trim($localDirOrFilename, '/');
+                $downloadDir = $this->removeForwardSlash($localDirOrFilename);
             } else {
                 // it's a filename
                 $downloadDir = pathinfo($localDirOrFilename, PATHINFO_DIRNAME);
                 if ($downloadDir === '.') {
                     $downloadDir = '';
                 }
-                $shortDownloadFilename = pathinfo($localDirOrFilename, PATHINFO_BASENAME);
             }
         } else {
             $downloadDir = pathinfo($remoteFilename, PATHINFO_DIRNAME);
@@ -133,9 +143,16 @@ END
             // The string does not start with a '/', prepend $this->projectDir
             $downloadDir = $this->projectDir . '/' . $downloadDir;
         }
-        return [$downloadDir, $shortDownloadFilename];
+        return $downloadDir;
     }
 
+    private function removeForwardSlash(string $path): string
+    {
+        if(str_ends_with($path, '/')) {
+            return rtrim($path, '/');
+        }
+        return $path;
+    }
     /**
      * @param string $zipPath
      * @param string $destination
@@ -153,5 +170,17 @@ END
             $this->io()->error($e->getMessage());
             throw new Exception("Could not unzip $zipPath to $destination");
         }
+    }
+
+    private function clearDirPath(string $fullFilePath): string
+    {
+        // Normalize the path by replacing multiple slashes with a single slash
+        $normalizedPath = preg_replace('#/+#', '/', $fullFilePath);
+
+        // If path starts with a single `/` (for absolute paths), retain it
+        if ($fullFilePath[0] === '/') {
+            $normalizedPath = '/' . ltrim($normalizedPath, '/');
+        }
+        return $normalizedPath;
     }
 }

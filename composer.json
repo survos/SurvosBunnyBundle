@@ -35,7 +35,7 @@
         "symfony/phpunit-bridge": "^6.4 || ^7.0",
         "symfony/twig-bundle": "^6.4 || ^7.0",
         "symfony/var-dumper": "^6.4 || ^7.0",
-        "survos/simple-datatables-bundle": "^1.5.377",
+        "survos/simple-datatables-bundle": "^1.5.378",
         "symfony/yaml": "^7.1",
         "symfony/http-client": "^7.1",
         "phpunit/phpunit": "^11.4"

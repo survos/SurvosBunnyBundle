@@ -2,11 +2,9 @@
 
 namespace Survos\BunnyBundle\Command;
 
-use Psr\Log\LoggerInterface;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Zenstruck\Bytes;
 use Zenstruck\Console\Attribute\Argument;
 use Zenstruck\Console\Attribute\Option;
@@ -22,8 +20,6 @@ final class BunnyListCommand extends InvokableServiceCommand
     use RunsProcesses;
 
     public function __construct(
-        private LoggerInterface       $logger,
-        private ParameterBagInterface $bag,
         private readonly BunnyService $bunnyService,
     )
     {

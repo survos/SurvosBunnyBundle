@@ -1,5 +1,5 @@
 parameters:
-    level: 3
+    level: 4
     inferPrivatePropertyTypeFromConstructor: true
     paths:
         - ./src/
@@ -15,6 +15,7 @@ parameters:
 #    checkGenericClassInNonGenericObjectType: false
     ignoreErrors:
         - '#Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeDefinition::children\(\)\.#'
+        - '#Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface::scalarNode\(\).#'
         # Only available in ArrayNodeDefinition which is given
         # False positive: clients are not dependencies of this project.
 #        -

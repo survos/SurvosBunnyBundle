@@ -21,7 +21,6 @@ class BunnyService
 {
     public function __construct(
         private CacheInterface $cache,
-        private readonly LoggerInterface $logger,
         private readonly HttpClientInterface $client,
         private ?BunnyClient $bunnyClient = null,
         private ?BaseAPI $baseApi = null,
@@ -32,7 +31,7 @@ class BunnyService
         //        private ?string $password = null, // for writing
         private ?EdgeStorageAPI $edgeStorageApi = null,
         private ?string $storageZone = null,
-        private array $zones=[]
+        private array $zones = []
     ) {
 // Create a BunnyClient using any HTTP client implementing "Psr\Http\Client\ClientInterface".
         $this->bunnyClient = new BunnyClient(
@@ -90,7 +89,7 @@ class BunnyService
     public function uploadFile(
         string $fileName, // the filename on bunny
         mixed $body, // content to write
-        ?string $storageZoneName=null,
+        ?string $storageZoneName = null,
         string $path = '',
         array $headers = [],
     ): BunnyClientResponseInterface {
@@ -111,7 +110,7 @@ class BunnyService
             if (!$storageZone = $this->config['storage_zone']) {
                 if (count($this->config['zones']) >= 1) {
                     $storageZone = $this->config['zones'][0]['name'];
-               }
+                }
             }
         }
         assert($storageZone, "Missing storageZone!");
@@ -130,7 +129,7 @@ class BunnyService
 
     public function getStorageZone(): string
     {
-        return $this->storageZone?? $this->config['storage_zone'];
+        return $this->storageZone ?? $this->config['storage_zone'];
     }
 
     public function getBunnyClient()
@@ -164,6 +163,5 @@ class BunnyService
     public function getZones(): array
     {
         return $this->config['zones'];
-
     }
 }

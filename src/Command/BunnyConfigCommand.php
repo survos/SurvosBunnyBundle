@@ -24,8 +24,6 @@ final class BunnyConfigCommand extends InvokableServiceCommand
     use RunsProcesses;
 
     public function __construct(
-        private LoggerInterface       $logger,
-        private ParameterBagInterface $bag,
         private readonly BunnyService $bunnyService,
         #[Autowire('%kernel.project_dir%')] private $projectDir,
     )

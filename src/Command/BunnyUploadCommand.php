@@ -3,7 +3,6 @@
 namespace Survos\BunnyBundle\Command;
 
 use Exception;
-use Psr\Log\LoggerInterface;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\Table;
@@ -25,8 +24,6 @@ final class BunnyUploadCommand extends InvokableServiceCommand
     use RunsProcesses;
 
     public function __construct(
-        private LoggerInterface $logger,
-        private ParameterBagInterface $bag,
         #[Autowire('%kernel.project_dir%')] private string $projectDir,
         private readonly BunnyService $bunnyService,
     ) {

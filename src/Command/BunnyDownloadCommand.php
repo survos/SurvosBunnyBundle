@@ -3,7 +3,6 @@
 namespace Survos\BunnyBundle\Command;
 
 use Exception;
-use Psr\Log\LoggerInterface;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\Table;
@@ -24,8 +23,6 @@ final class BunnyDownloadCommand extends InvokableServiceCommand
     use RunsProcesses;
 
     public function __construct(
-        private LoggerInterface $logger,
-        private ParameterBagInterface $bag,
         private readonly BunnyService $bunnyService,
         #[Autowire('%kernel.project_dir%')] private $projectDir,
     ) {
@@ -49,7 +46,6 @@ END
         #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
         #[Option(description: 'unzip')] ?bool $unzip = null,
         #[Option(description: 'download even if file exists')] bool $force = false,
-
     ): int {
         if ($unzip) {
             if (pathinfo($remoteFilename, PATHINFO_EXTENSION) !== 'zip') {
@@ -65,14 +61,14 @@ END
             $localDirOrFilename
         );
 
-        if(!str_ends_with($downloadDir, '/')) {
+        if (!str_ends_with($downloadDir, '/')) {
             $downloadDir .= '/';
         }
 
         $filename = (pathinfo($localDirOrFilename, PATHINFO_EXTENSION)) ? basename($localDirOrFilename) : null;
 
-        if ($downloadDir && !is_dir($downloadDir)) {
-            $io->info("Creating ".$downloadDir);
+        if (!is_dir($downloadDir)) {
+            $io->info("Creating " . $downloadDir);
             mkdir($downloadDir, 0777, true);
         }
 
@@ -80,10 +76,10 @@ END
             $downloadDir .= "/";
         }
 
-        if($filename) {
+        if ($filename) {
             $downloadPath =  $downloadDir . $filename;
         } else {
-            $downloadPath = $downloadDir ? $downloadDir . $shortDownloadFilename : $shortDownloadFilename;
+            $downloadPath = $downloadDir . $shortDownloadFilename;
         }
 
         $downloadPath = $this->clearDirPath($downloadPath);
@@ -148,7 +144,7 @@ END
 
     private function removeForwardSlash(string $path): string
     {
-        if(str_ends_with($path, '/')) {
+        if (str_ends_with($path, '/')) {
             return rtrim($path, '/');
         }
         return $path;

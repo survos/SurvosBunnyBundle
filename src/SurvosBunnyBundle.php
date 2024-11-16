@@ -10,6 +10,7 @@ use Survos\BunnyBundle\Command\BunnyDownloadCommand;
 use Survos\BunnyBundle\Command\BunnyUploadCommand;
 use Survos\BunnyBundle\Controller\BunnyController;
 use Survos\BunnyBundle\Service\BunnyService;
+use Survos\BunnyBundle\Twig\TwigExtension;
 use Survos\SimpleDatatables\SurvosSimpleDatatablesBundle;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -49,14 +50,11 @@ class SurvosBunnyBundle extends AbstractBundle
             ;
         }
 
-
         // twig classes, for bunny_url ?
-        /*
-        $definition = $builder
-        ->autowire('survos.barcode_twig', BarcodeTwigExtension::class)
-        ->addTag('twig.extension');
-
-        */
+        $builder
+            ->autowire('survos.bunny_twig', TwigExtension::class)
+            ->setAutoconfigured(true)
+            ->addTag('twig.extension');
     }
 
     private function addZonesSection(ArrayNodeDefinition $rootNode): void

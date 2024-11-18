@@ -2,14 +2,7 @@
 
 namespace Survos\BunnyBundle\Service;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Http\Discovery\Psr18Client;
-use Psr\Log\LoggerInterface;
-use Survos\CoreBundle\Service\SurvosUtils;
-use Symfony\Component\Cache\CacheItem;
-use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use ToshY\BunnyNet\BaseAPI;
 use ToshY\BunnyNet\Client\BunnyClient;
@@ -43,7 +36,9 @@ class BunnyService
             $this->storageZone = $this->config['storage_zone'];
         }
         foreach ($this->config['zones'] as $zoneData) {
-            SurvosUtils::assertKeyExists('name', $zoneData);
+            if (!array_key_exists('name', $zoneData)) {
+                throw new \LogicException($this->storageZone . " is not defined in config/packages/survos_bunny.yaml");
+            }
             $this->zones[$zoneData['name']] = $zoneData;
         }
     }

@@ -14,7 +14,6 @@
         "symfony/http-kernel": "^6.4 || ^7.0",
         "twig/twig": "^3.4",
         "toshy/bunnynet-php": "^4.5",
-        "endroid/installer": "^1.4",
         "zenstruck/console-extra": "^1.4",
         "zenstruck/bytes": "^1.0"
     },
@@ -42,10 +41,5 @@
     },
     "suggest": {
         "survos/simple-datatables-bundle": "searchable/sortable tables when browsing"
-    },
-    "config": {
-        "allow-plugins": {
-            "endroid/installer": true
-        }
     }
 }

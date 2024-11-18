@@ -66,8 +66,12 @@ class BunnyService
     public function getBaseApi(?string $apiKey = null): ?BaseAPI
     {
         if (!$this->baseApi) {
+            $apiKey ??= $this->config['api_key'];
+            if (!$apiKey) {
+                throw new \LogicException('BunnyService requires a base api key');
+            }
             $this->baseApi = new BaseAPI(
-                apiKey: $apiKey ?? $this->config['api_key'],
+                apiKey: $apiKey,
                 client: $this->bunnyClient,
             );
         }
@@ -127,9 +131,9 @@ class BunnyService
         return $this->edgeStorageApi;
     }
 
-    public function getStorageZone(): string
+    public function getStorageZone(): ?string
     {
-        return $this->storageZone ?? $this->config['storage_zone'];
+        return $this->storageZone ?? $this->config['storage_zone'] ?? null;
     }
 
     public function getBunnyClient()

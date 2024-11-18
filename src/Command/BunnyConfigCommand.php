@@ -16,6 +16,7 @@ use Zenstruck\Console\InvokableServiceCommand;
 use Zenstruck\Console\IO;
 use Zenstruck\Console\RunsCommands;
 use Zenstruck\Console\RunsProcesses;
+use function Symfony\Component\String\u;
 
 #[AsCommand('bunny:config', 'Configure your application with the bunny keys')]
 final class BunnyConfigCommand extends InvokableServiceCommand
@@ -41,7 +42,7 @@ final class BunnyConfigCommand extends InvokableServiceCommand
     {
         $apiKey = $apiKey??$this->bunnyService->getApiKey();
         if (!$apiKey) {
-            $io->error("set api_key in config/packages/survos_bunny.yaml or pass it as the first parameter here.");
+            $io->error("set environment variable BUNNY_API_KEY or pass it as the first parameter here.");
             return self::FAILURE;
         }
 
@@ -54,7 +55,7 @@ final class BunnyConfigCommand extends InvokableServiceCommand
                 if ($zoneName && ($zoneName !== $zone['Name'])) {
                     continue;
                 }
-                $zoneConstant = strtoupper($zone['Name']);
+                $zoneConstant = u($zone['Name'])->snake()->upper()->toString();
                 // inject slugger?  Or try to avoid dependencies?
 //                $zoneName = str_replace('-', '_', $zoneName);
                 $zoneConfig[] = [

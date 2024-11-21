@@ -103,7 +103,7 @@ class BunnyService
         return $ret;
     }
 
-    public function getEdgeApi(string $storageZone = null, bool $writeAccess = false): EdgeStorageAPI
+    public function getEdgeApi(string|null $storageZone = null, bool $writeAccess = false): EdgeStorageAPI
     {
         if (!$storageZone = $storageZone ?? $this->getStorageZone()) {
             if (!$storageZone = $this->config['storage_zone']) {

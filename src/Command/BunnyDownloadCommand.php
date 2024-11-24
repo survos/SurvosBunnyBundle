@@ -97,7 +97,7 @@ END
 
         $io->success($this->getName() . ': downloaded to ' . realpath($downloadPath));
 
-        if ($unzip && pathinfo($remoteFilename, PATHINFO_EXTENSION) === 'zip') {
+        if ($unzip) {
             $io->info("Unzipped $downloadPath to $localDirOrFilename");
             $dir = $downloadDir . DIRECTORY_SEPARATOR . pathinfo($downloadPath, PATHINFO_FILENAME);
             $io->info("Unzipping $downloadPath to $dir");

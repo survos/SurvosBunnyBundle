@@ -35,7 +35,7 @@ final class BunnyConfigCommand extends InvokableServiceCommand
     public function __invoke(
         IO                                                                                          $io,
         #[Argument(description: 'api key')] ?string        $apiKey=null,
-        #[Option(description: "Overwrite the survos_button.yaml config file")] bool $force=false,
+        #[Option(description: "Overwrite the survos_bunny.yaml config file")] bool $force=false,
         #[Option(name: 'zone', description: 'limit configuration to just one zone')] ?string $zoneName = null,
 
     ): int

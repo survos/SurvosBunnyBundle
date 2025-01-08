@@ -115,7 +115,10 @@ class BunnyService
         assert($storageZone, "Missing storageZone!");
 
         if (!$this->edgeStorageApi) {
-            $password = $this->zones[$storageZone][$writeAccess ? 'password' : 'readonly_password'];
+            $password = $this->zones[$storageZone][$passwordType = ($writeAccess ? 'password' : 'readonly_password')]??null;
+            if (!$password) {
+                throw new \LogicException("please configure zone.$storageZone.$passwordType in survos_bunny.yaml" );
+            }
             $this->edgeStorageApi = new EdgeStorageAPI(
                 apiKey: $password,
                 client: $this->bunnyClient,

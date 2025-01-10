@@ -91,7 +91,13 @@ END
             $zoneName = $this->bunnyService->getStorageZone();
         }
 
-        $content = file_get_contents($filename);
+        /*
+ * File contents handle from a `$filesystem` (e.g. Flysystem FtpAdapter).
+ */
+        if ($stream = fopen($filename, 'r')) {
+            // print all the page starting at the offset 10
+
+        $content = stream_get_contents($stream);
 
         // remotePath should have the slash
         $io->info("Uploading $filename to $zoneName/$remotePath$remoteFilename");
@@ -102,6 +108,8 @@ END
             body: $content,
             path: $remotePath . '/'
         );
+            fclose($stream);
+        }
 
         $io->info($ret->getStatusCode() . ' ' . $ret->getReasonPhrase());
 

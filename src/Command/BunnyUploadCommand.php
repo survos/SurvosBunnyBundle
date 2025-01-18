@@ -16,6 +16,7 @@ use Zenstruck\Console\RunsCommands;
 use Zenstruck\Console\RunsProcesses;
 
 use function PHPUnit\Framework\throwException;
+use function Symfony\Component\String\u;
 
 #[AsCommand('bunny:upload', 'upload remote bunny files')]
 final class BunnyUploadCommand extends InvokableServiceCommand
@@ -100,6 +101,9 @@ END
         $content = stream_get_contents($stream);
 
         // remotePath should have the slash
+            if (!u($remotePath)->endsWith('/')) {
+                $remotePath .= "/";
+            }
         $io->info("Uploading $filename to $zoneName/$remotePath$remoteFilename");
 
         $ret = $this->bunnyService->uploadFile(

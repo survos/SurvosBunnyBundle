@@ -2,6 +2,7 @@
 
 namespace Survos\BunnyBundle\Command;
 
+use Knp\Bundle\TimeBundle\DateTimeFormatter;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\Table;
@@ -21,6 +22,7 @@ final class BunnyListCommand extends InvokableServiceCommand
 
     public function __construct(
         private readonly BunnyService $bunnyService,
+        private readonly ?DateTimeFormatter $dateTimeFormatter=null
     )
     {
         parent::__construct();
@@ -74,7 +76,7 @@ final class BunnyListCommand extends InvokableServiceCommand
         // @todo: see if https://www.php.net/manual/en/class.numberformatter.php works to remove the dependency
         $table = new Table($io);
         $table->setHeaderTitle($zoneName . "/" . $path);
-        $headers = ['ObjectName', 'Path','Length', 'Url'];
+        $headers = ['ObjectName', 'Path','Length', 'DateCreated', 'Ago'];
         $table->setHeaders($headers);
         foreach ($list as $file) {
             $row = [];
@@ -82,7 +84,8 @@ final class BunnyListCommand extends InvokableServiceCommand
                 $row[$header] = $file[$header]??null;
             }
             $row['Length'] = Bytes::parse($row['Length']); // "389.79 GB"
-            $row['Url'] = "<href=https://symfony.com>Symfony Homepage</>";
+            $row['Ago'] = $this->dateTimeFormatter->formatDiff($file['LastChanged']);
+//            $row['Url'] = "<href=https://symfony.com>Symfony Homepage</>";
             $table->addRow($row);
         }
         $table->render();

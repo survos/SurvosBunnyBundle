@@ -84,7 +84,7 @@ final class BunnyListCommand extends InvokableServiceCommand
                 $row[$header] = $file[$header]??null;
             }
             $row['Length'] = Bytes::parse($row['Length']); // "389.79 GB"
-            $row['Ago'] = $this->dateTimeFormatter->formatDiff($file['LastChanged']);
+            $row['Ago'] = $this->dateTimeFormatter?->formatDiff($file['LastChanged']);
 //            $row['Url'] = "<href=https://symfony.com>Symfony Homepage</>";
             $table->addRow($row);
         }

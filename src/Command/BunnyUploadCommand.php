@@ -26,8 +26,9 @@ final class BunnyUploadCommand extends InvokableServiceCommand
 
     public function __construct(
         #[Autowire('%kernel.project_dir%')] private string $projectDir,
-        private readonly BunnyService $bunnyService,
-    ) {
+        private readonly BunnyService                      $bunnyService,
+    )
+    {
         parent::__construct();
         $this->setHelp(<<<END
 # if local path is within project, mirror the file structure, otherwise pass it as second argument
@@ -39,32 +40,33 @@ bin/console bunny:upload local/path/filename.zip remote/path/
 
 remote path is required unless a mirror of local
 END
-    );
+        );
     }
 
     /**
      * @throws Exception
      */
     public function __invoke(
-        IO $io,
-        #[Argument(description: 'file name to upload')] string $filename = '',
-        #[Argument(description: 'path within zone')] string $remoteDirOrFilename = '',
+        IO                                                        $io,
+        #[Argument(description: 'file name to upload')] string    $filename = '',
+        #[Argument(description: 'path within zone')] string       $remoteDirOrFilename = '',
         #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
-        #[Option(name: 'zip', description: 'isZip?')] ?bool $zip = null,
+        #[Option(name: 'zip', description: 'isZip?')] ?bool       $zip = null,
 //        #[Option(description: 'dir')] ?string $relativeDir = './',
-    ): int {
+    ): int
+    {
         $io->info($this->getName() . ' started');
         if (!file_exists($filename)) {
             $io->error("File $filename does not exist");
             return self::FAILURE;
         }
 
-        if(!$zip && is_dir($filename)) {
+        if (!$zip && is_dir($filename)) {
             $io->error("Please specify --zip for directories");
             return self::FAILURE;
         }
 
-        if($zip) {
+        if ($zip) {
             $filename = $this->createZip($filename);
         }
 
@@ -96,28 +98,29 @@ END
  * File contents handle from a `$filesystem` (e.g. Flysystem FtpAdapter).
  */
         if ($stream = fopen($filename, 'r')) {
+
             // print all the page starting at the offset 10
 
-        $content = stream_get_contents($stream);
+            $content = stream_get_contents($stream);
 
-        // remotePath should have the slash
+            // remotePath should have the slash
             if (!u($remotePath)->endsWith('/')) {
                 $remotePath .= "/";
             }
-        $io->info("Uploading $filename to $zoneName/$remotePath$remoteFilename");
+            $io->info("Uploading $filename to $zoneName/$remotePath$remoteFilename");
 
-        $ret = $this->bunnyService->uploadFile(
-            $remoteFilename,
-            storageZoneName: $zoneName,
-            body: $content,
-            path: $remotePath . '/'
-        );
+            $ret = $this->bunnyService->uploadFile(
+                $remoteFilename,
+                storageZoneName: $zoneName,
+                body: $content,
+                path: $remotePath . '/'
+            );
             fclose($stream);
+            $io->info($ret->getStatusCode() . ' ' . $ret->getReasonPhrase());
         }
 
-        $io->info($ret->getStatusCode() . ' ' . $ret->getReasonPhrase());
 
-        $io->success($filename . " has been uploaded to $zoneName/$remotePath$filename" );
+        $io->success($filename . " has been uploaded to $zoneName/$remotePath$filename");
 
         // @todo: download dir default, etc.
 
@@ -129,7 +132,7 @@ END
      * @param string $filePath
      * @return string
      */
-    private function adjustFilePath(string $filePath) :string
+    private function adjustFilePath(string $filePath): string
     {
         // Check if the file path starts with "/"
         if (!str_starts_with($filePath, '/')) {
@@ -189,9 +192,9 @@ END
         $fullFolderPath = $this->adjustFilePath($folder);
 
         $updatedPath = rtrim($fullFolderPath, '/');
-        $zipFileName = explode( '/', $updatedPath);
+        $zipFileName = explode('/', $updatedPath);
 
-        $zipFileName = $this->getZipPath($updatedPath.'/'.end($zipFileName));
+        $zipFileName = $this->getZipPath($updatedPath . '/' . end($zipFileName));
 
         $zip = new \ZipArchive();
 
@@ -226,7 +229,7 @@ END
      * @param string $filePath
      * @return string
      */
-    private function getZipPath(string $filePath) :string
+    private function getZipPath(string $filePath): string
     {
         if (!str_ends_with($filePath, '.zip')) {
             $filePath .= '.zip';

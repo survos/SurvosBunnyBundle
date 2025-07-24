@@ -4,43 +4,36 @@ namespace Survos\BunnyBundle\Command;
 
 use Exception;
 use Survos\BunnyBundle\Service\BunnyService;
+use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Zenstruck\Console\Attribute\Argument;
-use Zenstruck\Console\Attribute\Option;
-use Zenstruck\Console\InvokableServiceCommand;
-use Zenstruck\Console\IO;
-use Zenstruck\Console\RunsCommands;
-use Zenstruck\Console\RunsProcesses;
 use ZipArchive;
 
-#[AsCommand('bunny:download', 'download remote bunny files')]
-final class BunnyDownloadCommand extends InvokableServiceCommand
+#[AsCommand('bunny:download', 'download remote bunny files', help:             <<<END
+# downloads to data/composer.json 
+bin/console -vvv bunny:download data/composer.json
+
+END
+)]
+final class BunnyDownloadCommand
 {
-    use RunsCommands;
-    use RunsProcesses;
 
     public function __construct(
         private readonly BunnyService $bunnyService,
         #[Autowire('%kernel.project_dir%')] private $projectDir,
     ) {
-        parent::__construct();
-        $this->setHelp(
-            <<<END
-# downloads to data/composer.json 
-bin/console -vvv bunny:download data/composer.json
-
-END
-        );
     }
 
     /**
      * @throws Exception
      */
     public function __invoke(
-        IO $io,
+        SymfonyStyle $io,
         #[Argument(description: 'path within zone')] string $remoteFilename = '',
         #[Argument(description: 'local directory')] ?string $localDirOrFilename = '',
         #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
@@ -50,7 +43,7 @@ END
         if ($unzip) {
             if (pathinfo($remoteFilename, PATHINFO_EXTENSION) !== 'zip') {
                 $io->error("Only zip files are supported");
-                return self::FAILURE;
+                return Command::FAILURE;
             }
         }
 
@@ -95,13 +88,13 @@ END
             $io->info("$downloadPath written with $size bytes");
         }
 
-        $io->success($this->getName() . ': downloaded to ' . realpath($downloadPath));
+        $io->success(self::class . ': downloaded to ' . realpath($downloadPath));
 
         if ($unzip) {
             $io->info("Unzipped $downloadPath to $localDirOrFilename");
             $dir = $downloadDir . DIRECTORY_SEPARATOR . pathinfo($downloadPath, PATHINFO_FILENAME);
             $io->info("Unzipping $downloadPath to $dir");
-            $this->unzip($downloadPath, $dir);
+            $this->unzip($downloadPath, $dir, $io);
 
             $table = new Table($io);
             $table->setStyle('compact');
@@ -112,7 +105,7 @@ END
             $table->render();
         }
 
-        return self::SUCCESS;
+        return Command::SUCCESS;
     }
 
     private function sanitizeLocalDir(
@@ -154,7 +147,7 @@ END
      * @param string $destination
      * @throws Exception
      */
-    private function unzip(string $zipPath, string $destination): void
+    private function unzip(string $zipPath, string $destination, SymfonyStyle $io): void
     {
         $zip = new ZipArchive();
         try {
@@ -163,7 +156,7 @@ END
                 $zip->close();
             }
         } catch (Exception $e) {
-            $this->io()->error($e->getMessage());
+            $io->error($e->getMessage());
             throw new Exception("Could not unzip $zipPath to $destination");
         }
     }

@@ -4,47 +4,42 @@ namespace Survos\BunnyBundle\Command;
 
 use Psr\Log\LoggerInterface;
 use Survos\BunnyBundle\Service\BunnyService;
+use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Component\Yaml\Yaml;
 use ToshY\BunnyNet\Model\Api\Base\StorageZone\ListStorageZones;
-use Zenstruck\Console\Attribute\Argument;
-use Zenstruck\Console\Attribute\Option;
-use Zenstruck\Console\InvokableServiceCommand;
-use Zenstruck\Console\IO;
-use Zenstruck\Console\RunsCommands;
-use Zenstruck\Console\RunsProcesses;
 use function Symfony\Component\String\u;
 
 #[AsCommand('bunny:config', 'Configure your application with the bunny keys')]
-final class BunnyConfigCommand extends InvokableServiceCommand
+final class BunnyConfigCommand
 {
-    use RunsCommands;
-    use RunsProcesses;
 
     public function __construct(
         private readonly BunnyService $bunnyService,
         #[Autowire('%kernel.project_dir%')] private $projectDir,
     )
     {
-        parent::__construct();
     }
 
     public function __invoke(
-        IO                                                                                          $io,
-        #[Argument(description: 'api key')] ?string        $apiKey=null,
-        #[Option(description: "Overwrite the survos_bunny.yaml config file")] bool $force=false,
-        #[Option(name: 'zone', description: 'limit configuration to just one zone')] ?string $zoneName = null,
+        SymfonyStyle                                                                                          $io,
+        #[Argument('api key')] ?string        $apiKey=null,
+        #[Option("Overwrite the survos_bunny.yaml config file")] ?bool $force=null,
+        #[Option('limit configuration to just one zone', name: 'zone')] ?string $zoneName = null,
 
     ): int
     {
         $apiKey = $apiKey??$this->bunnyService->getApiKey();
         if (!$apiKey) {
             $io->error("set environment variable BUNNY_API_KEY or pass it as the first parameter here.");
-            return self::FAILURE;
+            return Command::FAILURE;
         }
 
         // if no zone, we could prompt
@@ -79,7 +74,7 @@ final class BunnyConfigCommand extends InvokableServiceCommand
         }
         $io->writeln($env);
 
-        return self::SUCCESS;
+        return Command::SUCCESS;
     }
 
 

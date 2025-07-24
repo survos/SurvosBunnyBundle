@@ -14,7 +14,6 @@
         "symfony/http-kernel": "^7.3",
         "twig/twig": "^3.4",
         "toshy/bunnynet-php": "^7.0",
-        "zenstruck/console-extra": "^1.4",
         "zenstruck/bytes": "^1.0"
     },
     "require-dev": {

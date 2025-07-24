@@ -4,33 +4,18 @@ namespace Survos\BunnyBundle\Command;
 
 use Exception;
 use Survos\BunnyBundle\Service\BunnyService;
+use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Zenstruck\Console\Attribute\Argument;
-use Zenstruck\Console\Attribute\Option;
-use Zenstruck\Console\InvokableServiceCommand;
-use Zenstruck\Console\IO;
-use Zenstruck\Console\RunsCommands;
-use Zenstruck\Console\RunsProcesses;
 
 use function PHPUnit\Framework\throwException;
 use function Symfony\Component\String\u;
 
-#[AsCommand('bunny:upload', 'upload remote bunny files')]
-final class BunnyUploadCommand extends InvokableServiceCommand
-{
-    use RunsCommands;
-    use RunsProcesses;
-
-    public function __construct(
-        #[Autowire('%kernel.project_dir%')] private string $projectDir,
-        private readonly BunnyService                      $bunnyService,
-    )
-    {
-        parent::__construct();
-        $this->setHelp(<<<END
+#[AsCommand('bunny:upload', 'upload remote bunny files', help: <<<END
 # if local path is within project, mirror the file structure, otherwise pass it as second argument
 bin/console bunny:upload local/path/filename.zip [remote/path/filename.zip] --zone=zoneName 
 # change name and path
@@ -39,15 +24,23 @@ bin/console bunny:upload local/path/filename.zip remote/path/newFilename.zip
 bin/console bunny:upload local/path/filename.zip remote/path/
 
 remote path is required unless a mirror of local
-END
-        );
+END)]
+final class BunnyUploadCommand extends Command
+{
+
+    public function __construct(
+        #[Autowire('%kernel.project_dir%')] private string $projectDir,
+        private readonly BunnyService                      $bunnyService,
+    )
+    {
+        parent::__construct();
     }
 
     /**
      * @throws Exception
      */
     public function __invoke(
-        IO                                                        $io,
+        SymfonyStyle                                                        $io,
         #[Argument(description: 'file name to upload')] string    $filename = '',
         #[Argument(description: 'path within zone')] string       $remoteDirOrFilename = '',
         #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
@@ -55,7 +48,6 @@ END
 //        #[Option(description: 'dir')] ?string $relativeDir = './',
     ): int
     {
-        $io->info($this->getName() . ' started');
         if (!file_exists($filename)) {
             $io->error("File $filename does not exist");
             return self::FAILURE;
@@ -124,7 +116,7 @@ END
 
         // @todo: download dir default, etc.
 
-        $io->success($this->getName() . ' finished');
+        $io->success(self::class . ' finished');
         return self::SUCCESS;
     }
 

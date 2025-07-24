@@ -4,23 +4,19 @@ namespace Survos\BunnyBundle\Command;
 
 use Knp\Bundle\TimeBundle\DateTimeFormatter;
 use Survos\BunnyBundle\Service\BunnyService;
+use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use ToshY\BunnyNet\Model\Api\Base\StorageZone\ListStorageZones;
 use ToshY\BunnyNet\Model\Api\EdgeStorage\BrowseFiles\ListFiles;
 use Zenstruck\Bytes;
-use Zenstruck\Console\Attribute\Argument;
-use Zenstruck\Console\Attribute\Option;
-use Zenstruck\Console\InvokableServiceCommand;
-use Zenstruck\Console\IO;
-use Zenstruck\Console\RunsCommands;
-use Zenstruck\Console\RunsProcesses;
 
 #[AsCommand('bunny:list', 'list bunny files')]
-final class BunnyListCommand extends InvokableServiceCommand
+final class BunnyListCommand extends Command
 {
-    use RunsCommands;
-    use RunsProcesses;
 
     public function __construct(
         private readonly BunnyService $bunnyService,
@@ -31,10 +27,10 @@ final class BunnyListCommand extends InvokableServiceCommand
     }
 
     public function __invoke(
-        IO                                                                                          $io,
-        #[Argument(description: 'path name within zone')] string        $path='',
-        #[Option(name: 'zone', description: 'zone name')] ?string $zoneName = null,
-        #[Option(name: 'zones', description: 'list the zone names')] bool $listZones = false,
+        SymfonyStyle                                                      $io,
+        #[Argument('path name within zone')] string          $path='',
+        #[Option('zone name', name: 'zone')] ?string         $zoneName = null,
+        #[Option('list the zone names', name: 'zones')] bool $listZones = false,
 
     ): int
     {
@@ -71,7 +67,7 @@ final class BunnyListCommand extends InvokableServiceCommand
 
         $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
         $list = $edgeStorageApi->request(
-            new ListFiles($zoneName, $path),
+            new ListFiles($zoneName, $path)
         )->getContents();
 
 
@@ -91,9 +87,9 @@ final class BunnyListCommand extends InvokableServiceCommand
             $table->addRow($row);
         }
         $table->render();
-        $this->io()->output()->writeln('<href=https://symfony.com>Symfony Homepage</>');
+//        $io->writeln('<href=https://symfony.com>Symfony Homepage</>');
 
-        $io->success($this->getName() . ' success ' . $zoneName);
+        $io->success(self::class . ' success ' . $zoneName);
         return self::SUCCESS;
     }
 

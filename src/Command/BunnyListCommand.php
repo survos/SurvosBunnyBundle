@@ -6,6 +6,8 @@ use Knp\Bundle\TimeBundle\DateTimeFormatter;
 use Survos\BunnyBundle\Service\BunnyService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\Table;
+use ToshY\BunnyNet\Model\Api\Base\StorageZone\ListStorageZones;
+use ToshY\BunnyNet\Model\Api\EdgeStorage\BrowseFiles\ListFiles;
 use Zenstruck\Bytes;
 use Zenstruck\Console\Attribute\Argument;
 use Zenstruck\Console\Attribute\Option;
@@ -43,7 +45,7 @@ final class BunnyListCommand extends InvokableServiceCommand
                 return self::FAILURE;
             }
 
-            $zones = $baseApi->listStorageZones()->getContents();
+            $zones = $baseApi->request(new ListStorageZones())->getContents();
             $table = new Table($io);
             $table->setHeaderTitle($zoneName . "/" . $path);
             $headers = ['Name', 'StorageUsed','FilesStored','Id'];
@@ -68,10 +70,10 @@ final class BunnyListCommand extends InvokableServiceCommand
         assert($zoneName, "missing zone name");
 
         $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
-        $list = $edgeStorageApi->listFiles(
-            storageZoneName: $zoneName,
-            path: $path
+        $list = $edgeStorageApi->request(
+            new ListFiles($zoneName, $path),
         )->getContents();
+
 
         // @todo: see if https://www.php.net/manual/en/class.numberformatter.php works to remove the dependency
         $table = new Table($io);

@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Component\Yaml\Yaml;
+use ToshY\BunnyNet\Model\Api\Base\StorageZone\ListStorageZones;
 use Zenstruck\Console\Attribute\Argument;
 use Zenstruck\Console\Attribute\Option;
 use Zenstruck\Console\InvokableServiceCommand;
@@ -48,7 +49,7 @@ final class BunnyConfigCommand extends InvokableServiceCommand
 
         // if no zone, we could prompt
         $baseApi = $this->bunnyService->getBaseApi($apiKey);
-            $zones = $baseApi->listStorageZones()->getContents();
+            $zones = $baseApi->request(new ListStorageZones())->getContents();
             $zoneConfig = [];
             $env[] = "BUNNY_API_KEY=$apiKey";
             foreach ($zones as $zone) {

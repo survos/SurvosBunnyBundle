@@ -7,6 +7,8 @@ use Symfony\Bridge\Twig\Attribute\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use ToshY\BunnyNet\Model\Api\Base\StorageZone\ListStorageZones;
+use ToshY\BunnyNet\Model\Api\EdgeStorage\BrowseFiles\ListFiles;
 
 class BunnyController extends AbstractController
 {
@@ -31,7 +33,7 @@ class BunnyController extends AbstractController
     {
         $this->checkSimpleDatatablesInstalled();
         $baseApi = $this->bunnyService->getBaseApi();
-        return ['zones' => $baseApi->listStorageZones()->getContents()];
+        return ['zones' => $baseApi->request(new ListStorageZones())->getContents()];
     }
 
     #[Route('/{zoneName}}/{path}/{fileName}', name: 'survos_bunny_download', methods: ['GET'], requirements: ['path'=> ".+"])]
@@ -40,7 +42,7 @@ class BunnyController extends AbstractController
     {
 
         $response = $this->bunnyService->downloadFile($fileName,$path,$zoneName);
-        return new Response($response); // eh
+        return new Response($response->getContents()); // eh
     }
 
 
@@ -54,10 +56,7 @@ class BunnyController extends AbstractController
     {
         $this->checkSimpleDatatablesInstalled();
         $edgeStorageApi = $this->bunnyService->getEdgeApi($zoneName);
-        $list = $edgeStorageApi->listFiles(
-            storageZoneName: $zoneName,
-            path: $path
-        );
+        $list = $edgeStorageApi->request(new ListFiles($zoneName, $path));
         return [
             'zoneName' => $zoneName,
             'path' => $path,
